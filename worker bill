@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="bn" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>স্মার্ট লেবার প্রো</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #4361ee; --primary-light: #eef0fd; --primary-dark: #2f4ac7;
+  --success: #10b981; --success-light: #d1fae5;
+  --warning: #f59e0b; --warning-light: #fef3c7;
+  --danger: #ef4444; --danger-light: #fee2e2;
+  --orange: #f97316; --purple: #8b5cf6;
+  --bg: #f4f7fe; --surface: #ffffff; --surface2: #f8faff;
+  --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0;
+  --shadow: 0 4px 20px rgba(67,97,238,0.08);
+  --shadow-lg: 0 10px 40px rgba(67,97,238,0.15);
+  --radius: 16px; --radius-sm: 10px;
+  --font: 'Inter', 'Hind Siliguri', sans-serif;
+}
+[data-theme="dark"] {
+  --bg: #0f172a; --surface: #1e293b; --surface2: #1a2540;
+  --text: #f1f5f9; --text-muted: #94a3b8; --border: #334155;
+  --shadow: 0 4px 20px rgba(0,0,0,0.3); --shadow-lg: 0 10px 40px rgba(0,0,0,0.4);
+  --primary-light: #1e2a50;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.3s, color 0.3s; }
+
+/* NAV */
+nav { background: var(--surface); padding: 14px 28px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+.nav-brand { font-size: 20px; font-weight: 700; color: var(--primary); flex: 1; min-width: 160px; }
+.nav-brand span { font-size: 11px; background: var(--primary); color: white; padding: 2px 7px; border-radius: 20px; vertical-align: middle; margin-left: 6px; font-weight: 500; }
+.search-bar { padding: 9px 18px; border: 1.5px solid var(--border); border-radius: 30px; background: var(--surface2); color: var(--text); font-size: 14px; outline: none; width: 220px; transition: border 0.2s; font-family: var(--font); }
+.search-bar:focus { border-color: var(--primary); }
+.nav-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { padding: 9px 18px; border-radius: var(--radius-sm); border: none; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; font-family: var(--font); }
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+.btn-outline { background: var(--surface2); color: var(--text-muted); border: 1.5px solid var(--border); }
+.btn-outline:hover { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+.btn-danger { background: var(--danger-light); color: var(--danger); }
+.btn-danger:hover { background: var(--danger); color: white; }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+
+/* STATS ROW */
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin: 20px 24px 0; }
+.stat-card { background: var(--surface); border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 12px; }
+.stat-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.stat-info h4 { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+.stat-info p { font-size: 20px; font-weight: 700; color: var(--text); }
+
+/* MONTH NAV */
+.month-nav { display: flex; align-items: center; gap: 10px; padding: 16px 24px 0; }
+.month-nav button { background: var(--surface); border: 1.5px solid var(--border); border-radius: 8px; padding: 6px 14px; cursor: pointer; font-size: 18px; color: var(--text); transition: 0.2s; }
+.month-nav button:hover { background: var(--primary-light); border-color: var(--primary); }
+.month-label { font-size: 16px; font-weight: 700; color: var(--primary); min-width: 120px; text-align: center; }
+
+/* GRID */
+.section-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px 8px; }
+.section-header h2 { font-size: 15px; color: var(--text-muted); font-weight: 500; }
+.employee-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 16px; padding: 0 24px 80px; }
+.emp-card { background: var(--surface); padding: 18px; border-radius: var(--radius); box-shadow: var(--shadow); cursor: pointer; transition: all 0.25s; border-left: 4px solid var(--primary); }
+.emp-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.emp-card h3 { font-size: 16px; font-weight: 700; }
+.emp-card .role { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.emp-card .card-stats { display: flex; justify-content: space-between; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+.emp-card .card-stat { text-align: center; }
+.emp-card .card-stat label { font-size: 11px; color: var(--text-muted); display: block; }
+.emp-card .card-stat span { font-size: 15px; font-weight: 700; color: var(--primary); }
+.emp-card .card-stat span.green { color: var(--success); }
+.emp-card .card-stat span.orange { color: var(--orange); }
+
+/* OVERLAY / MODAL */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(4px); z-index: 500; overflow-y: auto; padding: 20px; }
+.drawer { background: var(--surface); border-radius: 24px; max-width: 960px; margin: 0 auto; padding: 28px; position: relative; box-shadow: var(--shadow-lg); }
+.drawer-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 10px; }
+.drawer-header h2 { font-size: 22px; font-weight: 700; }
+.drawer-header small { color: var(--text-muted); font-weight: 400; }
+
+/* TABS */
+.tabs { display: flex; gap: 4px; background: var(--surface2); padding: 4px; border-radius: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.tab { padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text-muted); transition: 0.2s; border: none; background: none; font-family: var(--font); }
+.tab.active { background: var(--surface); color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.08); font-weight: 600; }
+
+/* CALENDAR */
+.calendar-header { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; margin-bottom: 4px; }
+.calendar-header span { text-align: center; font-size: 11px; font-weight: 600; color: var(--text-muted); }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+.day-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: var(--surface2); border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 500; border: 1.5px solid var(--border); transition: 0.15s; }
+.day-cell:hover { border-color: var(--primary); background: var(--primary-light); }
+.day-cell.p { background: var(--success-light); border-color: var(--success); color: #065f46; }
+.day-cell.h { background: var(--warning-light); border-color: var(--warning); color: #92400e; }
+.day-cell.a { background: var(--danger-light); border-color: var(--danger); color: #991b1b; }
+.day-cell.o { background: #ede9fe; border-color: var(--purple); color: #5b21b6; font-size: 10px; }
+
+/* ATT POPUP */
+.att-popup { display: none; position: fixed; background: var(--surface); border-radius: 14px; box-shadow: var(--shadow-lg); z-index: 9999; padding: 8px; min-width: 170px; border: 1px solid var(--border); }
+.att-popup button { width: 100%; padding: 9px 14px; border: none; border-radius: 8px; cursor: pointer; text-align: left; font-size: 13px; font-weight: 500; transition: 0.15s; margin-bottom: 3px; font-family: var(--font); }
+.att-popup button:last-child { margin-bottom: 0; }
+
+/* OVERTIME */
+.ot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; margin-top: 10px; }
+.ot-cell { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 8px; padding: 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.ot-cell label { font-size: 10px; color: var(--text-muted); }
+.ot-cell input { width: 60px; text-align: center; border: 1px solid var(--border); border-radius: 6px; padding: 4px; font-size: 13px; background: var(--surface); color: var(--text); font-family: var(--font); }
+
+/* PAYMENT HISTORY */
+.payment-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.payment-item { background: var(--surface2); border-radius: var(--radius-sm); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid var(--success); }
+.payment-item.advance { border-left-color: var(--danger); }
+.payment-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+/* MONTHLY REPORT TABLE */
+.report-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.report-table th { background: var(--primary); color: white; padding: 12px 14px; text-align: left; }
+.report-table td { padding: 11px 14px; border-bottom: 1px solid var(--border); color: var(--text); }
+.report-table tr:nth-child(even) td { background: var(--surface2); }
+.report-table .danger-row td { background: #fff5f5; color: var(--danger); font-weight: 600; }
+[data-theme="dark"] .report-table .danger-row td { background: #3b1515; }
+
+/* LEDGER FORM */
+.form-group { margin-bottom: 14px; }
+.form-group label { font-size: 13px; color: var(--text-muted); font-weight: 500; display: block; margin-bottom: 6px; }
+.input-field { width: 100%; padding: 10px 16px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--surface2); color: var(--text); font-size: 14px; outline: none; transition: border 0.2s; font-family: var(--font); }
+.input-field:focus { border-color: var(--primary); }
+
+/* SUMMARY PILLS */
+.summary-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.pill { padding: 6px 14px; border-radius: 30px; font-size: 13px; font-weight: 600; }
+.pill-blue { background: var(--primary-light); color: var(--primary); }
+.pill-green { background: var(--success-light); color: var(--success); }
+.pill-orange { background: var(--warning-light); color: #92400e; }
+.pill-red { background: var(--danger-light); color: var(--danger); }
+.pill-purple { background: #ede9fe; color: #5b21b6; }
+
+/* EMPTY STATE */
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+.empty-state .icon { font-size: 48px; margin-bottom: 14px; }
+.empty-state p { font-size: 16px; }
+
+/* DARK MODE TOGGLE */
+.dark-toggle { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 30px; padding: 7px 14px; cursor: pointer; font-size: 18px; transition: 0.2s; }
+.dark-toggle:hover { background: var(--primary-light); }
+
+/* ADD MODAL */
+.modal-sm { max-width: 380px; }
+
+@media (max-width: 600px) {
+  nav { padding: 12px 16px; }
+  .stats-row, .employee-grid { padding: 0 14px; }
+  .employee-grid { padding-bottom: 60px; }
+  .month-nav, .section-header { padding: 12px 14px 4px; }
+  .drawer { padding: 18px; }
+}
+@media print {
+  .no-print { display: none !important; }
+  body { background: white; }
+  .overlay { position: static; display: block !important; background: white; overflow: visible; padding: 0; }
+  .drawer { box-shadow: none; border-radius: 0; margin: 0; max-width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<nav class="no-print">
+  <div class="nav-brand">স্মার্ট লেবার প্রো <span>v2</span></div>
+  <input type="text" class="search-bar" id="searchInp" placeholder="নাম দিয়ে খুঁজুন..." oninput="renderHome()">
+  <div class="nav-actions">
+    <button class="dark-toggle" onclick="toggleDark()" title="ডার্ক মোড">🌙</button>
+    <button class="btn btn-outline" onclick="openMonthlyReport()">মাসিক রিপোর্ট</button>
+    <button class="btn btn-outline" onclick="openYearlyReport()">বার্ষিক রিপোর্ট</button>
+    <button class="btn btn-outline" onclick="exportData()">ব্যাকআপ</button>
+    <button class="btn btn-outline" onclick="triggerImport()">রিস্টোর</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    <button class="btn btn-primary" onclick="openAddModal()">+ নতুন শ্রমিক</button>
+  </div>
+</nav>
+
+<div class="stats-row no-print" id="statsRow"></div>
+
+<div class="month-nav no-print">
+  <button onclick="changeMonth(-1)">‹</button>
+  <span class="month-label" id="monthLabel"></span>
+  <button onclick="changeMonth(1)">›</button>
+</div>
+
+<div class="section-header no-print">
+  <h2 id="empCount">সকল শ্রমিক</h2>
+</div>
+
+<div class="employee-grid" id="mainGrid"></div>
+
+<!-- ATT POPUP -->
+<div id="attPopup" class="att-popup no-print">
+  <button style="background:#d1fae5;color:#065f46" onclick="setHajira('p')">✅ পূর্ণ হাজিরা</button>
+  <button style="background:#fef3c7;color:#92400e" onclick="setHajira('h')">🌓 অর্ধবেলা</button>
+  <button style="background:#fee2e2;color:#991b1b" onclick="setHajira('a')">❌ অনুপস্থিত</button>
+  <button style="background:#ede9fe;color:#5b21b6" onclick="openOTPopup()">⏱ ওভারটাইম</button>
+  <button style="background:var(--surface2);color:var(--text-muted)" onclick="setHajira('')">🗑 মুছুন</button>
+</div>
+
+<!-- OT QUICK INPUT -->
+<div id="otPopup" class="att-popup no-print" style="min-width:200px;">
+  <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;">ওভারটাইম ঘন্টা</label>
+  <input type="number" id="otHours" class="input-field" placeholder="যেমন: 2" step="0.5" min="0" max="12" style="margin-bottom:8px;">
+  <button class="btn btn-primary" style="width:100%;font-size:13px;" onclick="saveOT()">সেভ করুন</button>
+</div>
+
+<!-- PROFILE OVERLAY -->
+<div id="profileOverlay" class="overlay">
+  <div class="drawer">
+    <div class="drawer-header no-print">
+      <div>
+        <h2 id="profileName"></h2>
+        <small id="profileRole"></small>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline btn-sm" onclick="window.print()">প্রিন্ট</button>
+        <button class="btn btn-outline btn-sm" onclick="toggleModal('profileOverlay', false)">বন্ধ ✕</button>
+      </div>
+    </div>
+    <div class="tabs no-print">
+      <button class="tab active" onclick="switchTab('hajira')">হাজিরা</button>
+      <button class="tab" onclick="switchTab('overtime')">ওভারটাইম</button>
+      <button class="tab" onclick="switchTab('ledger')">বোনাস / অগ্রিম</button>
+      <button class="tab" onclick="switchTab('payment')">পেমেন্ট হিস্ট্রি</button>
+    </div>
+    <div id="tabContent"></div>
+  </div>
+</div>
+
+<!-- MONTHLY REPORT -->
+<div id="monthOverlay" class="overlay">
+  <div class="drawer">
+    <div class="drawer-header no-print">
+      <h2>মাসিক রিপোর্ট — <span id="monthReportLabel"></span></h2>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary btn-sm" onclick="window.print()">প্রিন্ট</button>
+        <button class="btn btn-outline btn-sm" onclick="toggleModal('monthOverlay',false)">বন্ধ</button>
+      </div>
+    </div>
+    <div id="monthlyTableContainer"></div>
+  </div>
+</div>
+
+<!-- YEARLY REPORT -->
+<div id="yearOverlay" class="overlay">
+  <div class="drawer">
+    <div class="drawer-header no-print">
+      <h2>বার্ষিক হিসাব — <span id="reportYear"></span></h2>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary btn-sm" onclick="window.print()">প্রিন্ট</button>
+        <button class="btn btn-outline btn-sm" onclick="toggleModal('yearOverlay',false)">বন্ধ</button>
+      </div>
+    </div>
+    <div id="yearlyTableContainer"></div>
+  </div>
+</div>
+
+<!-- ADD EMPLOYEE -->
+<div id="addModal" class="overlay">
+  <div class="drawer modal-sm">
+    <div class="drawer-header">
+      <h2>নতুন শ্রমিক যোগ</h2>
+      <button class="btn btn-outline btn-sm" onclick="toggleModal('addModal',false)">✕</button>
+    </div>
+    <div class="form-group"><label>নাম *</label><input id="nameInp" class="input-field" placeholder="শ্রমিকের নাম"></div>
+    <div class="form-group"><label>পদবি</label><input id="roleInp" class="input-field" placeholder="যেমন: রাজমিস্ত্রি"></div>
+    <div class="form-group"><label>দৈনিক বেতন (৳) *</label><input id="wageInp" class="input-field" type="number" placeholder="যেমন: 500"></div>
+    <div class="form-group"><label>ওভারটাইম রেট (৳/ঘন্টা)</label><input id="otRateInp" class="input-field" type="number" placeholder="যেমন: 80 (ফাঁকা রাখলে স্বয়ংক্রিয়)"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="addEmployee()">সেভ করুন</button>
+  </div>
+</div>
+
+<!-- PAYMENT MODAL -->
+<div id="paymentModal" class="overlay">
+  <div class="drawer modal-sm">
+    <div class="drawer-header">
+      <h2>পেমেন্ট রেকর্ড করুন</h2>
+      <button class="btn btn-outline btn-sm" onclick="toggleModal('paymentModal',false)">✕</button>
+    </div>
+    <div class="form-group"><label>পরিমাণ (৳)</label><input id="payAmt" class="input-field" type="number" placeholder="টাকার পরিমাণ"></div>
+    <div class="form-group"><label>ধরন</label>
+      <select id="payType" class="input-field">
+        <option value="salary">বেতন পরিশোধ</option>
+        <option value="advance">অগ্রিম</option>
+        <option value="bonus">বোনাস</option>
+      </select>
+    </div>
+    <div class="form-group"><label>নোট (ঐচ্ছিক)</label><input id="payNote" class="input-field" placeholder="কোনো মন্তব্য..."></div>
+    <button class="btn btn-primary" style="width:100%" onclick="savePayment()">সেভ করুন</button>
+  </div>
+</div>
+
+<script>
+// ---------- STATE ----------
+let employees = JSON.parse(localStorage.getItem('slp_v2') || 'null') || migrateOldData();
+let viewDate = new Date();
+let selectedEmpId = null, selectedDay = null, activeTab = 'hajira';
+
+function migrateOldData() {
+  const old = localStorage.getItem('pro_labor_v4');
+  if (old) {
+    const data = JSON.parse(old);
+    return data.map(e => ({ ...e, otRate: null, overtime: {}, payments: [] }));
+  }
+  return [];
+}
+
+function save() { localStorage.setItem('slp_v2', JSON.stringify(employees)); renderHome(); }
+
+function getKey(y, m) { return `${y}-${m}`; }
+function curKey() { return getKey(viewDate.getFullYear(), viewDate.getMonth()); }
+
+const MONTHS_BN = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+
+// ---------- MONTH NAV ----------
+function changeMonth(d) {
+  viewDate.setMonth(viewDate.getMonth() + d);
+  renderHome();
+}
+
+// ---------- STATS ----------
+function calcEmpStats(emp, key) {
+  const att = emp.attendance?.[key] || {};
+  let p = 0, h = 0, a = 0;
+  Object.values(att).forEach(v => { if(v==='p') p++; else if(v==='h') h++; else if(v==='a') a++; });
+  const days = p + h * 0.5;
+  const otHours = Object.values(emp.overtime?.[key] || {}).reduce((s, v) => s + (parseFloat(v)||0), 0);
+  const otRate = emp.otRate || Math.round(emp.wage / 8);
+  const led = emp.ledger?.[key] || { bonus: 0, advance: 0 };
+  const earned = days * emp.wage + otHours * otRate + (led.bonus||0) - (led.advance||0);
+  return { p, h, a, days, otHours, earned };
+}
+
+function renderStats() {
+  const key = curKey();
+  let totalWorkers = employees.length, totalDays = 0, totalPayable = 0;
+  employees.forEach(e => {
+    const s = calcEmpStats(e, key);
+    totalDays += s.days; totalPayable += s.earned;
+  });
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card"><div class="stat-icon" style="background:#eef0fd">👷</div><div class="stat-info"><h4>মোট শ্রমিক</h4><p>${totalWorkers}</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#d1fae5">📅</div><div class="stat-info"><h4>মোট হাজিরা (দিন)</h4><p>${totalDays}</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fef3c7">💰</div><div class="stat-info"><h4>এই মাসে দেনা</h4><p>৳${totalPayable.toLocaleString()}</p></div></div>
+  `;
+}
+
+// ---------- HOME ----------
+function renderHome() {
+  document.getElementById('monthLabel').textContent = `${MONTHS_BN[viewDate.getMonth()]} ${viewDate.getFullYear()}`;
+  renderStats();
+  const grid = document.getElementById('mainGrid');
+  const q = document.getElementById('searchInp').value.toLowerCase();
+  const filtered = employees.filter(e => e.name.toLowerCase().includes(q));
+  document.getElementById('empCount').textContent = `${filtered.length} জন শ্রমিক`;
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="icon">👷</div><p>কোনো শ্রমিক পাওয়া যায়নি</p></div>`;
+    return;
+  }
+  const key = curKey();
+  grid.innerHTML = filtered.map(emp => {
+    const s = calcEmpStats(emp, key);
+    return `<div class="emp-card" onclick="openProfile(${emp.id})">
+      <h3>${emp.name}</h3><p class="role">${emp.role || 'শ্রমিক'}</p>
+      <div class="card-stats">
+        <div class="card-stat"><label>পূর্ণ হাজিরা</label><span>${s.p}</span></div>
+        <div class="card-stat"><label>অর্ধবেলা</label><span class="orange">${s.h}</span></div>
+        <div class="card-stat"><label>ওভারটাইম</label><span class="green">${s.otHours}h</span></div>
+        <div class="card-stat"><label>পাওনা</label><span>৳${s.earned.toLocaleString()}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ---------- PROFILE ----------
+function openProfile(id) {
+  selectedEmpId = id;
+  const emp = employees.find(e => e.id === id);
+  document.getElementById('profileName').textContent = emp.name;
+  document.getElementById('profileRole').textContent = `${emp.role||'শ্রমিক'} • দৈনিক: ৳${emp.wage} • OT রেট: ৳${emp.otRate || Math.round(emp.wage/8)}/ঘন্টা`;
+  renderTab(activeTab);
+  toggleModal('profileOverlay', true);
+}
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.textContent.includes(
+    tab === 'hajira' ? 'হাজিরা' : tab === 'overtime' ? 'ওভারটাইম' : tab === 'ledger' ? 'বোনাস' : 'পেমেন্ট'
+  )));
+  renderTab(tab);
+}
+
+function renderTab(tab) {
+  const emp = employees.find(e => e.id === selectedEmpId);
+  const key = curKey();
+  const s = calcEmpStats(emp, key);
+  const led = emp.ledger?.[key] || { bonus: 0, advance: 0 };
+  const otRate = emp.otRate || Math.round(emp.wage / 8);
+
+  const summaryHTML = `<div class="summary-pills">
+    <span class="pill pill-blue">হাজিরা: ${s.days} দিন</span>
+    <span class="pill pill-green">মূল: ৳${(s.days * emp.wage).toLocaleString()}</span>
+    <span class="pill pill-purple">OT: ৳${(s.otHours * otRate).toLocaleString()}</span>
+    <span class="pill pill-orange">বোনাস: ৳${led.bonus||0}</span>
+    <span class="pill pill-red">অগ্রিম: ৳${led.advance||0}</span>
+    <span class="pill pill-green" style="font-size:15px;padding:8px 18px">নিট: ৳${s.earned.toLocaleString()}</span>
+  </div>`;
+
+  let content = '';
+  if (tab === 'hajira') {
+    const daysInMonth = new Date(viewDate.getFullYear(), viewDate.getMonth()+1, 0).getDate();
+    const att = emp.attendance?.[key] || {};
+    const ot = emp.overtime?.[key] || {};
+    const days = ['রবি','সোম','মঙ্গল','বুধ','বৃহ','শুক্র','শনি'];
+    const firstDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay();
+    let cells = '';
+    for (let i=0; i<firstDay; i++) cells += `<div></div>`;
+    for (let d=1; d<=daysInMonth; d++) {
+      const st = att[d]||'';
+      const hasOT = ot[d] ? ` <span style="font-size:9px">${ot[d]}h</span>` : '';
+      const cls = st === 'p' ? (ot[d] ? 'o' : 'p') : st;
+      cells += `<div class="day-cell ${cls}" onclick="dayClick(event,${d})" title="${d} তারিখ">${d}${hasOT}</div>`;
+    }
+    content = `${summaryHTML}
+      <div class="calendar-header">${days.map(d=>`<span>${d}</span>`).join('')}</div>
+      <div class="calendar-grid">${cells}</div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;font-size:12px;">
+        <span style="background:var(--success-light);padding:4px 10px;border-radius:6px;color:#065f46">✅ পূর্ণ</span>
+        <span style="background:var(--warning-light);padding:4px 10px;border-radius:6px;color:#92400e">🌓 অর্ধ</span>
+        <span style="background:var(--danger-light);padding:4px 10px;border-radius:6px;color:#991b1b">❌ অনুপস্থিত</span>
+        <span style="background:#ede9fe;padding:4px 10px;border-radius:6px;color:#5b21b6">⏱ OT সহ</span>
+      </div>`;
+  } else if (tab === 'overtime') {
+    const daysInMonth = new Date(viewDate.getFullYear(), viewDate.getMonth()+1, 0).getDate();
+    const ot = emp.overtime?.[key] || {};
+    const att = emp.attendance?.[key] || {};
+    let cells = '';
+    for (let d=1; d<=daysInMonth; d++) {
+      if (att[d] === 'p' || att[d] === 'h') {
+        cells += `<div class="ot-cell"><label>${d} তা.</label><input type="number" value="${ot[d]||''}" placeholder="0" min="0" max="12" step="0.5" onchange="saveOTDay(${d}, this.value)" style="width:60px;text-align:center;border:1.5px solid var(--border);border-radius:6px;padding:4px;background:var(--surface);color:var(--text);font-family:var(--font)"></div>`;
+      }
+    }
+    content = `${summaryHTML}<h4 style="margin-bottom:10px;color:var(--text-muted);font-size:13px">হাজির দিনের OT ঘন্টা লিখুন (রেট: ৳${otRate}/ঘন্টা)</h4>
+      ${cells ? `<div class="ot-grid">${cells}</div>` : '<p style="color:var(--text-muted)">এই মাসে কোনো হাজিরা নেই।</p>'}`;
+  } else if (tab === 'ledger') {
+    content = `${summaryHTML}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group"><label>বোনাস (৳)</label><input class="input-field" type="number" value="${led.bonus||0}" onchange="updateLedger('bonus',this.value)"></div>
+        <div class="form-group"><label>অগ্রিম (৳)</label><input class="input-field" type="number" value="${led.advance||0}" onchange="updateLedger('advance',this.value)"></div>
+      </div>
+      <div class="form-group"><label>দৈনিক বেতন পরিবর্তন</label><div style="display:flex;gap:8px;"><input id="wageEdit" class="input-field" type="number" value="${emp.wage}" style="flex:1"><button class="btn btn-primary btn-sm" onclick="updateWage()">আপডেট</button></div></div>
+      <div class="form-group"><label>OT রেট (৳/ঘন্টা)</label><div style="display:flex;gap:8px;"><input id="otRateEdit" class="input-field" type="number" value="${emp.otRate||''}" placeholder="${Math.round(emp.wage/8)} (স্বয়ংক্রিয়)" style="flex:1"><button class="btn btn-primary btn-sm" onclick="updateOTRate()">আপডেট</button></div></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="openPaymentModal()">💵 পেমেন্ট রেকর্ড করুন</button>
+      <button class="btn btn-danger" style="width:100%;margin-top:8px" onclick="deleteEmp(${emp.id})">🗑 শ্রমিক মুছুন</button>`;
+  } else if (tab === 'payment') {
+    const payments = (emp.payments||[]).slice().reverse();
+    let totalPaid = 0; payments.forEach(p => { if(p.type!=='advance') totalPaid += p.amount; });
+    const listHTML = payments.length ? payments.map(p => `
+      <li class="payment-item ${p.type==='advance'?'advance':''}">
+        <div><strong>৳${p.amount.toLocaleString()}</strong> — ${p.type==='salary'?'বেতন':p.type==='advance'?'অগ্রিম':'বোনাস'}
+          <div class="payment-meta">${p.note||''} • ${new Date(p.date).toLocaleDateString('bn-BD')}</div>
+        </div>
+      </li>`).join('') : '<li style="color:var(--text-muted);padding:10px">কোনো পেমেন্ট রেকর্ড নেই।</li>';
+    content = `${summaryHTML}<p style="font-size:13px;color:var(--text-muted);margin-bottom:10px">মোট পরিশোধ: <strong style="color:var(--success)">৳${totalPaid.toLocaleString()}</strong></p><ul class="payment-list">${listHTML}</ul>
+      <button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="openPaymentModal()">+ নতুন পেমেন্ট</button>`;
+  }
+  document.getElementById('tabContent').innerHTML = content;
+}
+
+// ---------- HAJIRA ----------
+function dayClick(e, day) {
+  e.stopPropagation();
+  selectedDay = day;
+  const pop = document.getElementById('attPopup');
+  pop.style.display = 'block';
+  const rect = e.target.getBoundingClientRect();
+  pop.style.top = (window.scrollY + rect.bottom + 6) + 'px';
+  pop.style.left = Math.min(rect.left, window.innerWidth - 200) + 'px';
+}
+
+function setHajira(status) {
+  const emp = employees.find(e => e.id === selectedEmpId);
+  if (!emp.attendance) emp.attendance = {};
+  if (!emp.attendance[curKey()]) emp.attendance[curKey()] = {};
+  if (status) emp.attendance[curKey()][selectedDay] = status;
+  else { delete emp.attendance[curKey()][selectedDay]; delete (emp.overtime?.[curKey()]||{})[selectedDay]; }
+  hidePopups(); save(); renderTab(activeTab);
+}
+
+// ---------- OT ----------
+function openOTPopup() {
+  document.getElementById('attPopup').style.display = 'none';
+  const emp = employees.find(e => e.id === selectedEmpId);
+  // ensure hajira is 'p' if no status
+  if (!emp.attendance?.[curKey()]?.[selectedDay]) {
+    if (!emp.attendance) emp.attendance = {};
+    if (!emp.attendance[curKey()]) emp.attendance[curKey()] = {};
+    emp.attendance[curKey()][selectedDay] = 'p';
+  }
+  const existingOT = emp.overtime?.[curKey()]?.[selectedDay] || '';
+  document.getElementById('otHours').value = existingOT;
+  const pop = document.getElementById('otPopup');
+  pop.style.display = 'block';
+  pop.style.top = '50%'; pop.style.left = '50%';
+  pop.style.transform = 'translate(-50%, -50%)';
+}
+
+function saveOT() {
+  const hrs = parseFloat(document.getElementById('otHours').value) || 0;
+  saveOTDay(selectedDay, hrs);
+  hidePopups();
+}
+
+function saveOTDay(day, hrs) {
+  const emp = employees.find(e => e.id === selectedEmpId);
+  if (!emp.overtime) emp.overtime = {};
+  if (!emp.overtime[curKey()]) emp.overtime[curKey()] = {};
+  if (hrs > 0) emp.overtime[curKey()][day] = hrs; else delete emp.overtime[curKey()][day];
+  save(); renderTab(activeTab);
+}
+
+// ---------- LEDGER ----------
+function updateLedger(type, val) {
+  const emp = employees.find(e => e.id === selectedEmpId);
+  if (!emp.ledger) emp.ledger = {};
+  if (!emp.ledger[curKey()]) emp.ledger[curKey()] = { bonus: 0, advance: 0 };
+  emp.ledger[curKey()][type] = parseFloat(val)||0;
+  save();
+}
+function updateWage() {
+  const emp = employees.find(e => e.id === selectedEmpId);
+  const v = parseInt(document.getElementById('wageEdit').value);
+  if (v > 0) { emp.wage = v; save(); openProfile(selectedEmpId); }
+}
+function updateOTRate() {
+  const emp = employees.find(e => e.id === selectedEmpId);
+  const v = parseInt(document.getElementById('otRateEdit').value);
+  emp.otRate = v > 0 ? v : null; save(); openProfile(selectedEmpId);
+}
+
+// ---------- PAYMENTS ----------
+function openPaymentModal() { toggleModal('paymentModal', true); }
+function savePayment() {
+  const emp = employees.find(e => e.id === selectedEmpId);
+  const amt = parseFloat(document.getElementById('payAmt').value);
+  const type = document.getElementById('payType').value;
+  const note = document.getElementById('payNote').value;
+  if (!amt) return alert('পরিমাণ দিন');
+  if (!emp.payments) emp.payments = [];
+  emp.payments.push({ id: Date.now(), amount: amt, type, note, date: new Date().toISOString() });
+  // auto-update ledger for bonus/advance
+  if (type === 'bonus') { if(!emp.ledger) emp.ledger={}; if(!emp.ledger[curKey()]) emp.ledger[curKey()]={bonus:0,advance:0}; emp.ledger[curKey()].bonus = (emp.ledger[curKey()].bonus||0) + amt; }
+  if (type === 'advance') { if(!emp.ledger) emp.ledger={}; if(!emp.ledger[curKey()]) emp.ledger[curKey()]={bonus:0,advance:0}; emp.ledger[curKey()].advance = (emp.ledger[curKey()].advance||0) + amt; }
+  save(); toggleModal('paymentModal', false);
+  document.getElementById('payAmt').value=''; document.getElementById('payNote').value='';
+  renderTab('payment'); switchTab('payment');
+}
+
+// ---------- REPORTS ----------
+function openMonthlyReport() {
+  const key = curKey();
+  document.getElementById('monthReportLabel').textContent = `${MONTHS_BN[viewDate.getMonth()]} ${viewDate.getFullYear()}`;
+  let html = `<table class="report-table"><thead><tr><th>শ্রমিক</th><th>পূর্ণ</th><th>অর্ধ</th><th>মোট দিন</th><th>OT (ঘন্টা)</th><th>মূল বেতন</th><th>OT বেতন</th><th>বোনাস</th><th>অগ্রিম</th><th>নিট পাওনা</th></tr></thead><tbody>`;
+  employees.forEach(emp => {
+    const s = calcEmpStats(emp, key);
+    const otRate = emp.otRate || Math.round(emp.wage/8);
+    const led = emp.ledger?.[key] || {bonus:0,advance:0};
+    const cls = s.earned < 0 ? 'danger-row' : '';
+    html += `<tr class="${cls}"><td>${emp.name}</td><td>${s.p}</td><td>${s.h}</td><td>${s.days}</td><td>${s.otHours}</td><td>৳${(s.days*emp.wage).toLocaleString()}</td><td>৳${(s.otHours*otRate).toLocaleString()}</td><td>৳${led.bonus||0}</td><td>৳${led.advance||0}</td><td><strong>${s.earned<0?'ঋণী: ':''}৳${Math.abs(s.earned).toLocaleString()}</strong></td></tr>`;
+  });
+  const totals = employees.reduce((acc,e) => {
+    const s = calcEmpStats(e,key); acc.days+=s.days; acc.earned+=s.earned; return acc;
+  }, {days:0,earned:0});
+  html += `<tr style="background:var(--primary);color:white"><td><strong>মোট</strong></td><td colspan="3"><strong>${totals.days} দিন</strong></td><td colspan="5"></td><td><strong>৳${totals.earned.toLocaleString()}</strong></td></tr></tbody></table>`;
+  document.getElementById('monthlyTableContainer').innerHTML = html;
+  toggleModal('monthOverlay', true);
+}
+
+function openYearlyReport() {
+  const year = viewDate.getFullYear();
+  document.getElementById('reportYear').textContent = year;
+  let html = `<table class="report-table"><thead><tr><th>শ্রমিক</th><th>মোট হাজিরা</th><th>মোট OT (ঘন্টা)</th><th>মূল আয়</th><th>OT আয়</th><th>বোনাস</th><th>অগ্রিম</th><th>বর্তমান অবস্থা</th></tr></thead><tbody>`;
+  employees.forEach(emp => {
+    let totalDays=0, totalOT=0, totalBonus=0, totalAdvance=0;
+    for (let m=0;m<12;m++) {
+      const key = getKey(year,m);
+      const att = emp.attendance?.[key]||{};
+      Object.values(att).forEach(v => { if(v==='p') totalDays++; else if(v==='h') totalDays+=0.5; });
+      totalOT += Object.values(emp.overtime?.[key]||{}).reduce((s,v)=>s+(parseFloat(v)||0),0);
+      const led = emp.ledger?.[key]||{bonus:0,advance:0};
+      totalBonus += led.bonus||0; totalAdvance += led.advance||0;
+    }
+    const otRate = emp.otRate || Math.round(emp.wage/8);
+    const earned = totalDays*emp.wage; const otEarned = totalOT*otRate;
+    const net = earned+otEarned+totalBonus-totalAdvance;
+    const cls = net<0?'danger-row':'';
+    html += `<tr class="${cls}"><td>${emp.name}</td><td>${totalDays}</td><td>${totalOT}</td><td>৳${earned.toLocaleString()}</td><td>৳${otEarned.toLocaleString()}</td><td>৳${totalBonus.toLocaleString()}</td><td>৳${totalAdvance.toLocaleString()}</td><td><strong>${net<0?'ঋণী ':'পাবে '}৳${Math.abs(net).toLocaleString()}</strong></td></tr>`;
+  });
+  html += `</tbody></table>`;
+  document.getElementById('yearlyTableContainer').innerHTML = html;
+  toggleModal('yearOverlay', true);
+}
+
+// ---------- EMPLOYEE CRUD ----------
+function openAddModal() {
+  document.getElementById('nameInp').value=''; document.getElementById('roleInp').value='';
+  document.getElementById('wageInp').value=''; document.getElementById('otRateInp').value='';
+  toggleModal('addModal', true);
+}
+function addEmployee() {
+  const name = document.getElementById('nameInp').value.trim();
+  const role = document.getElementById('roleInp').value.trim();
+  const wage = parseInt(document.getElementById('wageInp').value);
+  const otRate = parseInt(document.getElementById('otRateInp').value) || null;
+  if (!name || !wage) return alert('নাম ও বেতন আবশ্যক');
+  employees.push({ id: Date.now(), name, role, wage, otRate, attendance:{}, overtime:{}, ledger:{}, payments:[] });
+  save(); toggleModal('addModal', false);
+}
+function deleteEmp(id) {
+  if (confirm('এই শ্রমিককে মুছে ফেলতে চান?')) {
+    employees = employees.filter(e => e.id !== id);
+    save(); toggleModal('profileOverlay', false);
+  }
+}
+
+// ---------- DATA ----------
+function exportData() {
+  const blob = new Blob([JSON.stringify(employees, null, 2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `smart-labor-backup-${new Date().toISOString().slice(0,10)}.json`; a.click();
+}
+function triggerImport() { document.getElementById('importFile').click(); }
+function importData(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!Array.isArray(data)) throw new Error();
+      if (confirm(`${data.length} জন শ্রমিকের ডেটা রিস্টোর করবেন? বর্তমান ডেটা মুছে যাবে।`)) {
+        employees = data.map(e => ({
+          ...e, overtime: e.overtime||{}, payments: e.payments||[], otRate: e.otRate||null
+        }));
+        save(); alert('ডেটা সফলভাবে রিস্টোর হয়েছে!');
+      }
+    } catch { alert('ফাইলটি সঠিক নয়।'); }
+  };
+  r.readAsText(f);
+}
+
+// ---------- UI HELPERS ----------
+function toggleModal(id, show) { document.getElementById(id).style.display = show?'block':'none'; }
+function hidePopups() {
+  document.getElementById('attPopup').style.display='none';
+  const op = document.getElementById('otPopup'); op.style.display='none'; op.style.transform='';
+}
+function toggleDark() {
+  const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('slp_theme', t);
+  document.querySelector('.dark-toggle').textContent = t==='dark' ? '☀️' : '🌙';
+}
+
+// ---------- GLOBAL EVENTS ----------
+window.addEventListener('click', e => {
+  if (!e.target.closest('#attPopup') && !e.target.closest('.day-cell')) {
+    document.getElementById('attPopup').style.display='none';
+  }
+  if (!e.target.closest('#otPopup')) {
+    const op = document.getElementById('otPopup'); op.style.display='none'; op.style.transform='';
+  }
+});
+document.querySelectorAll('.overlay').forEach(o => {
+  o.addEventListener('click', e => { if(e.target===o) toggleModal(o.id, false); });
+});
+
+// ---------- INIT ----------
+(function init() {
+  const theme = localStorage.getItem('slp_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+  document.querySelector('.dark-toggle').textContent = theme==='dark'?'☀️':'🌙';
+  renderHome();
+})();
+</script>
+</body>
+</html>
