@@ -115,7 +115,9 @@ nav{background:var(--surface);padding:12px 20px;display:flex;align-items:center;
 .att-popup button:last-child{margin-bottom:0}
 
 /* OT POPUP */
-.ot-popup{display:none;position:fixed;background:var(--surface);border-radius:14px;box-shadow:var(--shadow-lg);z-index:9999;padding:14px;min-width:200px;border:1px solid var(--border)}
+.ot-popup{display:none;position:fixed;background:var(--surface);border-radius:14px;box-shadow:var(--shadow-lg);z-index:9999;padding:14px;min-width:220px;border:1px solid var(--border)}
+/* ADV badge on calendar */
+.day-cell .adv-badge{font-size:8px;color:#c2410c;font-weight:700}
 
 /* FORM */
 .form-group{margin-bottom:12px}
@@ -251,7 +253,20 @@ select.input-field{cursor:pointer}
   <button style="background:var(--danger-light);color:#991b1b" onclick="setHajira('a')">❌ অনুপস্থিত</button>
   <button style="background:var(--purple-light);color:#5b21b6" onclick="setHajira('holiday')">🎉 ছুটি (পেইড)</button>
   <button style="background:var(--primary-light);color:var(--primary)" onclick="openOTInput()">⏱ ওভারটাইম</button>
+  <button style="background:#fff7ed;color:#c2410c" onclick="openDailyAdvance()">💸 দৈনিক অগ্রিম</button>
   <button style="background:var(--surface2);color:var(--text-muted)" onclick="setHajira('')">🗑 মুছুন</button>
+</div>
+
+<!-- DAILY ADVANCE POPUP -->
+<div id="advPopup" class="ot-popup no-print">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <label style="font-size:12px;color:var(--text-muted);font-weight:600">দৈনিক অগ্রিম</label>
+    <span id="advDayLabel" style="font-size:11px;background:var(--danger-light);color:var(--danger);padding:2px 8px;border-radius:20px;font-weight:600"></span>
+  </div>
+  <input type="number" id="advAmtInp" class="input-field" placeholder="টাকার পরিমাণ" min="0" style="margin-bottom:6px">
+  <input type="text" id="advNoteInp" class="input-field" placeholder="নোট (ঐচ্ছিক)" style="margin-bottom:8px">
+  <button class="btn btn-primary" style="width:100%;font-size:12px;background:#ea580c" onclick="saveDailyAdvance()">সেভ করুন</button>
+  <button class="btn btn-outline btn-sm" style="width:100%;margin-top:5px" onclick="deleteDailyAdvance()">🗑 এই দিনের অগ্রিম মুছুন</button>
 </div>
 
 <!-- OT POPUP -->
@@ -499,8 +514,9 @@ function calcEmpStats(emp, key) {
   const otHours = Object.values(emp.overtime?.[key]||{}).reduce((s,v)=>s+(parseFloat(v)||0),0);
   const otRate = emp.otRate || Math.round(emp.wage/8);
   const led = emp.ledger?.[key] || {bonus:0,advance:0};
-  const earned = days*emp.wage + otHours*otRate + (led.bonus||0) - (led.advance||0);
-  return {p,h,a,hol,days,otHours,earned,otRate};
+  const dailyAdvTotal = Object.values(emp.dailyAdvance?.[key]||{}).reduce((s,v)=>s+(parseFloat(v)||0),0);
+  const earned = days*emp.wage + otHours*otRate + (led.bonus||0) - (led.advance||0) - dailyAdvTotal;
+  return {p,h,a,hol,days,otHours,earned,otRate,dailyAdvTotal};
 }
 
 // ===== GROUPS =====
@@ -614,6 +630,7 @@ function pillsHTML(emp, key) {
     <span class="pill pill-purple">OT: ৳${(s.otHours*s.otRate).toLocaleString()}</span>
     <span class="pill pill-orange">বোনাস: ৳${led.bonus||0}</span>
     <span class="pill pill-red">অগ্রিম: ৳${led.advance||0}</span>
+    <span class="pill pill-red">দৈনিক অগ্রিম: ৳${s.dailyAdvTotal||0}</span>
     <span class="pill pill-green" style="font-size:14px;padding:7px 16px">নিট: ৳${s.earned.toLocaleString()}</span>
   </div>`;
 }
@@ -640,7 +657,9 @@ function renderTab(tab) {
       const otH=ot[d]?`<span class="ot-badge">${ot[d]}h</span>`:'';
       const cls = st||'';
       const hdTitle = isHD?` title="${isHD}"`:'';
-      cells+=`<div class="day-cell ${cls}${isHD&&!st?' holiday':''}"${hdTitle} onclick="dayClick(event,${d})">${d}${otH}</div>`;
+      const dayAdv = emp.dailyAdvance?.[key]?.[d];
+      const advBadge = dayAdv ? `<span class="adv-badge">৳${dayAdv}</span>` : '';
+      cells+=`<div class="day-cell ${cls}${isHD&&!st?' holiday':''}"${hdTitle} onclick="dayClick(event,${d})">${d}${otH}${advBadge}</div>`;
     }
     const hdKeys = Object.keys(BD_HOLIDAYS).filter(k=>parseInt(k.split('-')[0])===viewDate.getMonth());
     const hdList = hdKeys.map(k=>`<span class="holiday-badge">${parseInt(k.split('-')[1])} ${BD_HOLIDAYS[k]}</span>`).join('');
@@ -682,7 +701,7 @@ function renderTab(tab) {
     let totalPaid=0; payments.forEach(p=>{if(p.type==='salary')totalPaid+=p.amount;});
     const listHTML=payments.length?payments.map(p=>`
       <li class="payment-item ${p.type}">
-        <div><strong>৳${p.amount.toLocaleString()}</strong> — ${p.type==='salary'?'বেতন পরিশোধ':p.type==='advance'?'অগ্রিম':'বোনাস'}
+        <div><strong>৳${p.amount.toLocaleString()}</strong> — ${p.type==='salary'?'বেতন পরিশোধ':p.type==='advance'?'অগ্রিম':p.type==='daily_advance'?'দৈনিক অগ্রিম':'বোনাস'}
           <div class="payment-meta">${p.note||'—'} • ${new Date(p.date).toLocaleDateString('bn-BD')}</div>
         </div>
         <button class="btn btn-danger btn-sm" onclick="deletePayment(${p.id})">✕</button>
@@ -738,6 +757,45 @@ function saveOTDay(day,hrs){
   if(!emp.overtime)emp.overtime={};
   if(!emp.overtime[curKey()])emp.overtime[curKey()]={};
   if(hrs>0)emp.overtime[curKey()][day]=hrs;else delete emp.overtime[curKey()][day];
+  save();renderTab(activeTab);
+}
+
+// ===== DAILY ADVANCE =====
+function openDailyAdvance(){
+  document.getElementById('attPopup').style.display='none';
+  const emp=employees.find(e=>e.id===selectedEmpId);
+  const existing=emp.dailyAdvance?.[curKey()]?.[selectedDay]||'';
+  document.getElementById('advAmtInp').value=existing;
+  document.getElementById('advNoteInp').value='';
+  document.getElementById('advDayLabel').textContent=`${selectedDay} তারিখ`;
+  const pop=document.getElementById('advPopup');
+  pop.style.display='block';
+  pop.style.top=(window.innerHeight/2-100+window.scrollY)+'px';
+  pop.style.left=(window.innerWidth/2-110)+'px';
+  document.getElementById('advAmtInp').focus();
+}
+function saveDailyAdvance(){
+  const emp=employees.find(e=>e.id===selectedEmpId);
+  const amt=parseFloat(document.getElementById('advAmtInp').value)||0;
+  const note=document.getElementById('advNoteInp').value.trim();
+  if(!emp.dailyAdvance)emp.dailyAdvance={};
+  if(!emp.dailyAdvance[curKey()])emp.dailyAdvance[curKey()]={};
+  if(amt>0){
+    emp.dailyAdvance[curKey()][selectedDay]=amt;
+    // also log in payments history
+    if(!emp.payments)emp.payments=[];
+    // remove old entry for same day if exists
+    emp.payments=emp.payments.filter(p=>!(p.type==='daily_advance'&&p.day===selectedDay&&p.monthKey===curKey()));
+    emp.payments.push({id:Date.now(),amount:amt,type:'daily_advance',note:note||(selectedDay+' তারিখের অগ্রিম'),day:selectedDay,monthKey:curKey(),date:new Date().toISOString()});
+  }
+  document.getElementById('advPopup').style.display='none';
+  save();renderTab(activeTab);
+}
+function deleteDailyAdvance(){
+  const emp=employees.find(e=>e.id===selectedEmpId);
+  if(emp.dailyAdvance?.[curKey()])delete emp.dailyAdvance[curKey()][selectedDay];
+  emp.payments=(emp.payments||[]).filter(p=>!(p.type==='daily_advance'&&p.day===selectedDay&&p.monthKey===curKey()));
+  document.getElementById('advPopup').style.display='none';
   save();renderTab(activeTab);
 }
 
@@ -801,6 +859,7 @@ function openSlipModal(){
       <div class="slip-row"><span>ওভারটাইম (${s.otHours}h × ৳${s.otRate})</span><span>৳${(s.otHours*s.otRate).toLocaleString()}</span></div>
       <div class="slip-row"><span>বোনাস</span><span>+ ৳${led.bonus||0}</span></div>
       <div class="slip-row"><span>অগ্রিম কাটা</span><span>− ৳${led.advance||0}</span></div>
+      <div class="slip-row"><span>দৈনিক অগ্রিম মোট</span><span>− ৳${s.dailyAdvTotal||0}</span></div>
       <hr class="slip-divider">
       <div class="slip-row slip-total"><span>নিট পাওনা</span><span>৳${s.earned.toLocaleString()}</span></div>
       <div class="slip-row"><span>এই মাসে পরিশোধ</span><span style="color:var(--success)">৳${totalPaid.toLocaleString()}</span></div>
@@ -994,7 +1053,7 @@ function importData(e){
       const data=JSON.parse(ev.target.result);
       if(!Array.isArray(data))throw new Error();
       if(confirm(`${data.length} জন শ্রমিকের ডেটা রিস্টোর করবেন?`)){
-        employees=data.map(e=>({...e,overtime:e.overtime||{},payments:e.payments||[],photo:e.photo||null,group:e.group||'',otRate:e.otRate||null}));
+        employees=data.map(e=>({...e,overtime:e.overtime||{},payments:e.payments||[],photo:e.photo||null,group:e.group||'',otRate:e.otRate||null,dailyAdvance:e.dailyAdvance||{}}));
         save();alert('ডেটা সফলভাবে রিস্টোর হয়েছে!');
       }
     }catch{alert('ফাইলটি সঠিক নয়।');}
@@ -1013,6 +1072,7 @@ function toggleModal(id,show){document.getElementById(id).style.display=show?'bl
 function hidePopups(){
   document.getElementById('attPopup').style.display='none';
   document.getElementById('otPopup').style.display='none';
+  document.getElementById('advPopup').style.display='none';
 }
 function toggleDark(){
   const t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
@@ -1033,6 +1093,7 @@ function toggleDark(){
 window.addEventListener('click',e=>{
   if(!e.target.closest('#attPopup')&&!e.target.closest('.day-cell'))document.getElementById('attPopup').style.display='none';
   if(!e.target.closest('#otPopup')&&!e.target.closest('#attPopup'))document.getElementById('otPopup').style.display='none';
+  if(!e.target.closest('#advPopup')&&!e.target.closest('#attPopup'))document.getElementById('advPopup').style.display='none';
 });
 document.querySelectorAll('.overlay').forEach(o=>{
   o.addEventListener('click',e=>{if(e.target===o)toggleModal(o.id,false);});
