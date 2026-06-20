@@ -101,13 +101,14 @@ nav{background:var(--surface);padding:12px 20px;display:flex;align-items:center;
 .calendar-header{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px}
 .calendar-header span{text-align:center;font-size:10px;font-weight:600;color:var(--text-muted)}
 .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-.day-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--surface2);border-radius:7px;cursor:pointer;font-size:11px;font-weight:500;border:1.5px solid var(--border);transition:.15s;line-height:1.2}
+.day-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--surface2);border-radius:7px;cursor:pointer;font-size:11px;font-weight:500;border:1.5px solid var(--border);transition:.15s;line-height:1.2;min-height:50px}
 .day-cell:hover{border-color:var(--primary);background:var(--primary-light)}
 .day-cell.p{background:var(--success-light);border-color:var(--success);color:#065f46}
 .day-cell.h{background:var(--warning-light);border-color:var(--warning);color:#92400e}
 .day-cell.a{background:var(--danger-light);border-color:var(--danger);color:#991b1b}
 .day-cell.holiday{background:var(--purple-light);border-color:var(--purple);color:#5b21b6}
 .day-cell .ot-badge{font-size:8px;opacity:.8}
+.day-cell .adv-badge{font-size:8px;color:#c2410c;font-weight:700}
 
 /* ATT POPUP */
 .att-popup{display:none;position:fixed;background:var(--surface);border-radius:14px;box-shadow:var(--shadow-lg);z-index:9999;padding:8px;min-width:170px;border:1px solid var(--border)}
@@ -187,12 +188,43 @@ select.input-field{cursor:pointer}
 .photo-upload-area:hover{border-color:var(--primary);color:var(--primary)}
 
 @media(max-width:600px){
-  nav{padding:10px 14px}
-  .stats-row,.employee-grid{padding:0 12px}
-  .employee-grid{padding-bottom:60px}
-  .month-nav,.section-header,.group-filter{padding-left:12px;padding-right:12px}
-  .drawer{padding:16px;border-radius:16px}
-  .search-bar{width:160px}
+  nav{padding:10px 12px;gap:8px}
+  .nav-brand{font-size:16px;min-width:120px}
+  .search-bar{width:140px;font-size:12px;padding:7px 12px}
+  .btn{padding:8px 14px;font-size:11px;min-height:36px;display:flex;align-items:center;justify-content:center}
+  .btn-sm{padding:6px 10px;font-size:10px;min-height:32px}
+  .stats-row,.employee-grid{padding:0 10px}
+  .employee-grid{padding-bottom:100px;grid-template-columns:1fr}
+  .month-nav,.section-header,.group-filter{padding-left:10px;padding-right:10px;padding-top:10px}
+  .drawer{padding:14px;border-radius:14px;margin:16px 0}
+  .drawer-header h2{font-size:18px}
+  .drawer-header{flex-direction:column;align-items:flex-start}
+  .drawer-header div:last-child{width:100%;display:flex;gap:6px;flex-wrap:wrap}
+  .drawer-header div:last-child button{flex:1;min-width:60px}
+  .tab{padding:6px 10px;font-size:11px;flex:1;text-align:center}
+  .stat-card{padding:10px 14px;gap:8px}
+  .stat-icon{width:36px;height:36px;font-size:16px}
+  .stat-info h4{font-size:10px}
+  .stat-info p{font-size:17px}
+  .day-cell{font-size:12px;min-height:52px}
+  .ot-grid{grid-template-columns:repeat(3,1fr);gap:4px}
+  .ot-cell{padding:4px}
+  .ot-cell input{width:50px;font-size:11px;padding:3px}
+  .emp-card{padding:12px}
+  .emp-card h3{font-size:14px}
+  .card-stats{gap:4px;margin-top:8px}
+  .card-stat label{font-size:9px}
+  .card-stat span{font-size:13px}
+  .report-table{font-size:11px}
+  .report-table th,.report-table td{padding:6px 8px}
+  .slip{padding:16px;font-size:12px}
+  .form-group label{font-size:11px}
+  .input-field{padding:8px 10px;font-size:12px;min-height:36px}
+  .summary-pills{gap:5px}
+  .pill{padding:4px 10px;font-size:11px}
+  .att-popup{min-width:160px;font-size:12px}
+  .att-popup button{padding:7px 10px;margin-bottom:2px}
+  .ot-popup{min-width:190px}
 }
 @media print{
   .no-print{display:none!important}
@@ -295,6 +327,7 @@ select.input-field{cursor:pointer}
     </div>
     <div class="tabs no-print">
       <button class="tab active" onclick="switchTab('hajira')">📅 হাজিরা</button>
+      <button class="tab" onclick="switchTab('settlement')">💸 হিসাব ও সেটেলমেন্ট</button>
       <button class="tab" onclick="switchTab('overtime')">⏱ ওভারটাইম</button>
       <button class="tab" onclick="switchTab('ledger')">💰 বোনাস/অগ্রিম</button>
       <button class="tab" onclick="switchTab('payment')">🧾 পেমেন্ট হিস্ট্রি</button>
@@ -612,6 +645,7 @@ function switchTab(t) {
   document.querySelectorAll('.tab').forEach(el => {
     el.classList.toggle('active',
       (t==='hajira'&&el.textContent.includes('হাজিরা'))||
+      (t==='settlement'&&el.textContent.includes('হিসাব'))||
       (t==='overtime'&&el.textContent.includes('ওভারটাইম'))||
       (t==='ledger'&&el.textContent.includes('বোনাস'))||
       (t==='payment'&&el.textContent.includes('পেমেন্ট'))||
@@ -642,14 +676,79 @@ function renderTab(tab) {
   const led = emp.ledger?.[key]||{bonus:0,advance:0};
   let content = '';
 
-  if (tab==='hajira') {
+  if (tab==='settlement') {
+    const key=curKey();
+    const s=calcEmpStats(emp,key);
+    const led=emp.ledger?.[key]||{bonus:0,advance:0};
+    const paid=(emp.payments||[]).filter(p=>p.type==='salary'&&p.date.startsWith(viewDate.getFullYear()+'-'+(String(viewDate.getMonth()+1).padStart(2,'0')))).reduce((s,p)=>s+p.amount,0);
+    const dailyAdvPaid=(emp.payments||[]).filter(p=>p.type==='daily_advance'&&p.date.startsWith(viewDate.getFullYear()+'-'+(String(viewDate.getMonth()+1).padStart(2,'0')))).reduce((s,p)=>s+p.amount,0);
+    const due=s.earned-paid;
+    
+    const yearlyAdvance=(()=>{let total=0;for(let m=0;m<12;m++){const k=getKey(viewDate.getFullYear(),m);total+=Object.values(emp.dailyAdvance?.[k]||{}).reduce((s,v)=>s+(parseFloat(v)||0),0);}return total;})();
+    const monthlyAdvance=s.dailyAdvTotal||0;
+    
+    content=`${pillsHTML(emp,key)}
+      <div style="display:grid;gap:12px;margin-bottom:16px">
+        <div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px;border-left:3px solid var(--success)">
+          <p style="font-size:11px;color:var(--text-muted);margin:0 0 4px">এই মাসে পাওনা</p>
+          <p style="font-size:20px;font-weight:700;color:var(--text);margin:0">৳${s.earned.toLocaleString()}</p>
+          <p style="font-size:11px;color:var(--text-muted);margin:4px 0 0">মূল: ৳${(s.days*emp.wage).toLocaleString()} + OT: ৳${(s.otHours*s.otRate).toLocaleString()}</p>
+        </div>
+        
+        <div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px;border-left:3px solid var(--danger)">
+          <p style="font-size:11px;color:var(--text-muted);margin:0 0 4px">এই মাসে দিয়েছেন</p>
+          <p style="font-size:20px;font-weight:700;color:var(--text);margin:0">৳${paid.toLocaleString()}</p>
+          <p style="font-size:11px;color:var(--text-muted);margin:4px 0 0">${(emp.payments||[]).filter(p=>p.type==='salary'&&p.date.includes(viewDate.getFullYear()+'-'+(String(viewDate.getMonth()+1).padStart(2,'0')))).length} পেমেন্ট</p>
+        </div>
+
+        <div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px;border-left:3px solid var(--orange)">
+          <p style="font-size:11px;color:var(--text-muted);margin:0 0 4px">বাকি / অতিরিক্ত</p>
+          <p style="font-size:20px;font-weight:700;color:${due<0?'var(--danger)':'var(--success)'};margin:0">৳${Math.abs(due).toLocaleString()}</p>
+          <p style="font-size:11px;color:var(--text-muted);margin:4px 0 0">${due<0?'অতিরিক্ত দিয়েছেন':'এখনও দেবেন'}</p>
+        </div>
+      </div>
+
+      <h4 style="font-size:13px;font-weight:600;color:var(--text);margin:16px 0 8px">অগ্রিম বিবরণী</h4>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="background:#fff7ed;border:0.5px solid #fed7aa;border-radius:8px;padding:10px">
+          <p style="font-size:11px;color:#92400e;font-weight:600;margin:0 0 3px">এই মাসের দৈনিক অগ্রিম</p>
+          <p style="font-size:16px;font-weight:700;color:#c2410c;margin:0">৳${monthlyAdvance.toLocaleString()}</p>
+          <p style="font-size:10px;color:#92400e;margin:3px 0 0">${monthlyAdvance>0?(emp.dailyAdvance?.[key]?Object.keys(emp.dailyAdvance[key]).length:'0')+' দিন':'নেই'}</p>
+        </div>
+        <div style="background:#ede9fe;border:0.5px solid #c4b5fd;border-radius:8px;padding:10px">
+          <p style="font-size:11px;color:#5b21b6;font-weight:600;margin:0 0 3px">মাসিক অগ্রিম (Ledger)</p>
+          <p style="font-size:16px;font-weight:700;color:#7f77dd;margin:0">৳${(led.advance||0).toLocaleString()}</p>
+          <p style="font-size:10px;color:#5b21b6;margin:3px 0 0">সরাসরি পরিশোধিত</p>
+        </div>
+        <div style="background:#fee2e2;border:0.5px solid #fca5a5;border-radius:8px;padding:10px">
+          <p style="font-size:11px;color:#991b1b;font-weight:600;margin:0 0 3px">বছরব্যাপী অগ্রিম</p>
+          <p style="font-size:16px;font-weight:700;color:#dc2626;margin:0">৳${yearlyAdvance.toLocaleString()}</p>
+          <p style="font-size:10px;color:#991b1b;margin:3px 0 0">${viewDate.getFullYear()}</p>
+        </div>
+        <div style="background:#d1fae5;border:0.5px solid #86efac;border-radius:8px;padding:10px">
+          <p style="font-size:11px;color:#065f46;font-weight:600;margin:0 0 3px">মোট অগ্রিম</p>
+          <p style="font-size:16px;font-weight:700;color:#10b981;margin:0">৳${(monthlyAdvance+(led.advance||0)+yearlyAdvance).toLocaleString()}</p>
+          <p style="font-size:10px;color:#065f46;margin:3px 0 0">সব ধরন</p>
+        </div>
+      </div>
+
+      <h4 style="font-size:13px;font-weight:600;color:var(--text);margin:16px 0 8px">দ্রুত সমন্বয় করুন</h4>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="form-group"><label>পরিশোধ যোগ করুন (৳)</label><div style="display:flex;gap:6px"><input id="adjPayInp" class="input-field" type="number" placeholder="পরিমাণ" style="flex:1"><button class="btn btn-success btn-sm" onclick="addQuickPayment()" style="background:var(--success);color:#fff;padding:8px 12px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">যোগ করুন</button></div></div>
+        <div class="form-group"><label>মোট পাওনা সমন্বয় (৳)</label><div style="display:flex;gap:6px"><input id="adjDueInp" class="input-field" type="number" placeholder="পরিমাণ" style="flex:1"><button class="btn btn-outline btn-sm" onclick="adjustDue()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">সমন্বয়</button></div></div>
+      </div>
+
+      <div style="margin-top:12px;padding:10px;background:var(--surface2);border-radius:8px;border:1px dashed var(--border)">
+        <p style="font-size:12px;color:var(--text-muted);margin:0"><strong>💡 টিপস:</strong> শ্রমিকের বাকি টাকা দেখতে এই ট্যাবটি রেখে দিন। প্রতিবার পেমেন্ট করলে উপরের "পেমেন্ট হিস্ট্রি" ট্যাবে রেকর্ড যোগ হয়।</p>
+      </div>`;
+  } else if(tab==='hajira') {
     const daysInMonth = new Date(viewDate.getFullYear(),viewDate.getMonth()+1,0).getDate();
     const att = emp.attendance?.[key]||{};
     const ot = emp.overtime?.[key]||{};
     const firstDay = new Date(viewDate.getFullYear(),viewDate.getMonth(),1).getDay();
     const wdays = ['রবি','সোম','মঙ্গল','বুধ','বৃহ','শুক্র','শনি'];
     let cells = '';
-    for(let i=0;i<firstDay;i++) cells+=`<div></div>`;
+    for(let i=0;i<firstDay;i++) cells+=`<div style="min-width:48px"></div>`;
     for(let d=1;d<=daysInMonth;d++){
       const st=att[d]||'';
       const hdKey=`${viewDate.getMonth()}-${d}`;
@@ -659,19 +758,27 @@ function renderTab(tab) {
       const hdTitle = isHD?` title="${isHD}"`:'';
       const dayAdv = emp.dailyAdvance?.[key]?.[d];
       const advBadge = dayAdv ? `<span class="adv-badge">৳${dayAdv}</span>` : '';
-      cells+=`<div class="day-cell ${cls}${isHD&&!st?' holiday':''}"${hdTitle} onclick="dayClick(event,${d})">${d}${otH}${advBadge}</div>`;
+      cells+=`<div class="day-cell ${cls}${isHD&&!st?' holiday':''}" style="min-width:48px"${hdTitle} onclick="dayClick(event,${d})">${d}${otH}${advBadge}</div>`;
     }
     const hdKeys = Object.keys(BD_HOLIDAYS).filter(k=>parseInt(k.split('-')[0])===viewDate.getMonth());
     const hdList = hdKeys.map(k=>`<span class="holiday-badge">${parseInt(k.split('-')[1])} ${BD_HOLIDAYS[k]}</span>`).join('');
     content = `${pillsHTML(emp,key)}
-      <div class="calendar-header">${wdays.map(d=>`<span>${d}</span>`).join('')}</div>
-      <div class="calendar-grid">${cells}</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;padding:8px;background:var(--surface2);border-radius:8px;flex-wrap:wrap">
+        <span style="font-size:12px;color:var(--text-muted);font-weight:600">💡 মোবাইলে স্ক্রল করুন ↔️</span>
+      </div>
+      <div style="overflow-x:auto;border-radius:10px;border:1px solid var(--border);padding:8px;background:var(--surface2)">
+        <div style="min-width:max-content;padding:0 4px">
+          <div class="calendar-header">${wdays.map(d=>`<span style="min-width:48px">${d}</span>`).join('')}</div>
+          <div class="calendar-grid" style="grid-template-columns:repeat(7,48px)">${cells}</div>
+        </div>
+      </div>
       ${hdList?`<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px">${hdList}</div>`:''}
       <div style="margin-top:10px;display:flex;gap:7px;flex-wrap:wrap;font-size:11px">
         <span style="background:var(--success-light);padding:3px 9px;border-radius:6px;color:#065f46">✅ পূর্ণ</span>
         <span style="background:var(--warning-light);padding:3px 9px;border-radius:6px;color:#92400e">🌓 অর্ধ</span>
         <span style="background:var(--danger-light);padding:3px 9px;border-radius:6px;color:#991b1b">❌ অনুপস্থিত</span>
         <span style="background:var(--purple-light);padding:3px 9px;border-radius:6px;color:#5b21b6">🎉 ছুটি</span>
+        <span style="background:#fff7ed;padding:3px 9px;border-radius:6px;color:#c2410c">💸 অগ্রিম</span>
       </div>`;
   } else if(tab==='overtime') {
     const daysInMonth=new Date(viewDate.getFullYear(),viewDate.getMonth()+1,0).getDate();
@@ -760,7 +867,28 @@ function saveOTDay(day,hrs){
   save();renderTab(activeTab);
 }
 
-// ===== DAILY ADVANCE =====
+// ===== SETTLEMENT =====
+function addQuickPayment(){
+  const emp=employees.find(e=>e.id===selectedEmpId);
+  const amt=parseFloat(document.getElementById('adjPayInp').value);
+  if(!amt)return alert('পরিমাণ দিন');
+  if(!emp.payments)emp.payments=[];
+  emp.payments.push({id:Date.now(),amount:amt,type:'salary',note:'দ্রুত পরিশোধ',date:new Date().toISOString()});
+  save();document.getElementById('adjPayInp').value='';
+  switchTab('settlement');
+}
+function adjustDue(){
+  const emp=employees.find(e=>e.id===selectedEmpId);
+  const amt=parseFloat(document.getElementById('adjDueInp').value);
+  if(!amt)return alert('পরিমাণ দিন');
+  // Create a ledger adjustment entry
+  const key=curKey();
+  if(!emp.ledger)emp.ledger={};
+  if(!emp.ledger[key])emp.ledger[key]={bonus:0,advance:0};
+  emp.ledger[key].advance=(emp.ledger[key].advance||0)+amt;
+  save();document.getElementById('adjDueInp').value='';
+  switchTab('settlement');
+}
 function openDailyAdvance(){
   document.getElementById('attPopup').style.display='none';
   const emp=employees.find(e=>e.id===selectedEmpId);
