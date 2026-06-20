@@ -571,16 +571,23 @@ function setGroup(g) { activeGroup = g; renderHome(); }
 // ===== STATS =====
 function renderStats() {
   const key = curKey();
-  let total=employees.length, totalDays=0, totalPayable=0, totalOT=0;
+  let total=employees.length, totalDays=0, totalPayable=0, totalOT=0, totalAdv=0, totalPaid=0;
   employees.forEach(e => {
     const s = calcEmpStats(e,key);
-    totalDays+=s.days; totalPayable+=s.earned; totalOT+=s.otHours;
+    totalDays+=s.days; totalPayable+=s.earned; totalOT+=s.otHours; totalAdv+=(s.dailyAdvTotal||0);
+    const paid=(e.payments||[]).filter(p=>p.type==='salary'&&p.date.startsWith(viewDate.getFullYear()+'-'+(String(viewDate.getMonth()+1).padStart(2,'0')))).reduce((s,p)=>s+p.amount,0);
+    totalPaid+=paid;
   });
+  const monthCost=totalPayable+totalAdv;
+  const remaining=monthCost-totalPaid;
   document.getElementById('statsRow').innerHTML = `
     <div class="stat-card"><div class="stat-icon" style="background:#eef0fd">👷</div><div class="stat-info"><h4>মোট শ্রমিক</h4><p>${total}</p></div></div>
     <div class="stat-card"><div class="stat-icon" style="background:var(--success-light)">📅</div><div class="stat-info"><h4>মোট হাজিরা</h4><p>${totalDays}</p></div></div>
     <div class="stat-card"><div class="stat-icon" style="background:var(--purple-light)">⏱</div><div class="stat-info"><h4>ওভারটাইম</h4><p>${totalOT}h</p></div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:var(--warning-light)">💰</div><div class="stat-info"><h4>এই মাসে দেনা</h4><p>৳${totalPayable.toLocaleString()}</p></div></div>`;
+    <div class="stat-card"><div class="stat-icon" style="background:#fff7ed">💸</div><div class="stat-info"><h4>মোট অগ্রিম</h4><p>৳${totalAdv.toLocaleString()}</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:var(--danger-light)">💰</div><div class="stat-info"><h4>এই মাসের মোট খরচ</h4><p style="color:var(--danger);font-weight:700">৳${monthCost.toLocaleString()}</p></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:var(--orange)">💵</div><div class="stat-info"><h4>এই মাসে পরিশোধ</h4><p style="color:var(--success)">৳${totalPaid.toLocaleString()}</p></div></div>
+    <div class="stat-card" style="border-left-color:${remaining>0?'var(--danger)':'var(--success)'}"><div class="stat-icon" style="background:${remaining>0?'var(--danger-light)':'var(--success-light)'}">📊</div><div class="stat-info"><h4>${remaining>0?'বাকি দেবেন':'অতিরিক্ত দিয়েছেন'}</h4><p style="color:${remaining>0?'var(--danger)':'var(--success)'}">৳${Math.abs(remaining).toLocaleString()}</p></div></div>`;
 }
 
 // ===== HOME =====
@@ -762,10 +769,49 @@ function renderTab(tab) {
     }
     const hdKeys = Object.keys(BD_HOLIDAYS).filter(k=>parseInt(k.split('-')[0])===viewDate.getMonth());
     const hdList = hdKeys.map(k=>`<span class="holiday-badge">${parseInt(k.split('-')[1])} ${BD_HOLIDAYS[k]}</span>`).join('');
+    
+    const totalFullDays = Object.values(att).filter(v=>v==='p').length;
+    const totalHalfDays = Object.values(att).filter(v=>v==='h').length;
+    const totalAbsent = Object.values(att).filter(v=>v==='a').length;
+    const totalHolidays = Object.values(att).filter(v=>v==='holiday').length;
+    const totalAdvanceDays = Object.keys(emp.dailyAdvance?.[key]||{}).length;
+    const daysInMonth = new Date(viewDate.getFullYear(),viewDate.getMonth()+1,0).getDate();
+    const totalWorkedDays = totalFullDays + totalHalfDays + totalHolidays;
+    const totalUnmarkedDays = daysInMonth - totalWorkedDays - totalAbsent;
+    
     content = `${pillsHTML(emp,key)}
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;padding:8px;background:var(--surface2);border-radius:8px;flex-wrap:wrap">
-        <span style="font-size:12px;color:var(--text-muted);font-weight:600">💡 মোবাইলে স্ক্রল করুন ↔️</span>
+        <span style="font-size:12px;color:var(--text-muted);font-weight:600">📊 হাজিরা পরিসংখ্যান (স্ক্রল করুন)</span>
       </div>
+      <div style="overflow-x:auto;border-radius:10px;border:1px solid var(--border);padding:8px;background:var(--surface2);margin-bottom:12px">
+        <div style="display:flex;gap:8px;min-width:max-content;padding:4px">
+          <div style="background:var(--success-light);border-radius:10px;padding:10px 14px;text-align:center;min-width:90px;flex-shrink:0">
+            <p style="font-size:11px;color:#065f46;font-weight:600;margin:0 0 4px">✅ পূর্ণ</p>
+            <p style="font-size:18px;font-weight:700;color:#10b981;margin:0">${totalFullDays}</p>
+          </div>
+          <div style="background:var(--warning-light);border-radius:10px;padding:10px 14px;text-align:center;min-width:90px;flex-shrink:0">
+            <p style="font-size:11px;color:#92400e;font-weight:600;margin:0 0 4px">🌓 অর্ধবেলা</p>
+            <p style="font-size:18px;font-weight:700;color:#f59e0b;margin:0">${totalHalfDays}</p>
+          </div>
+          <div style="background:var(--danger-light);border-radius:10px;padding:10px 14px;text-align:center;min-width:90px;flex-shrink:0">
+            <p style="font-size:11px;color:#991b1b;font-weight:600;margin:0 0 4px">❌ অনুপস্থিত</p>
+            <p style="font-size:18px;font-weight:700;color:#ef4444;margin:0">${totalAbsent}</p>
+          </div>
+          <div style="background:var(--purple-light);border-radius:10px;padding:10px 14px;text-align:center;min-width:90px;flex-shrink:0">
+            <p style="font-size:11px;color:#5b21b6;font-weight:600;margin:0 0 4px">🎉 ছুটি</p>
+            <p style="font-size:18px;font-weight:700;color:#8b5cf6;margin:0">${totalHolidays}</p>
+          </div>
+          <div style="background:#fff7ed;border-radius:10px;padding:10px 14px;text-align:center;min-width:90px;flex-shrink:0">
+            <p style="font-size:11px;color:#92400e;font-weight:600;margin:0 0 4px">💸 অগ্রিম</p>
+            <p style="font-size:18px;font-weight:700;color:#c2410c;margin:0">${totalAdvanceDays}</p>
+          </div>
+          <div style="background:var(--surface);border-radius:10px;padding:10px 14px;text-align:center;min-width:90px;flex-shrink:0;border:1px dashed var(--border)">
+            <p style="font-size:11px;color:var(--text-muted);font-weight:600;margin:0 0 4px">⏳ বাকি</p>
+            <p style="font-size:18px;font-weight:700;color:var(--text-muted);margin:0">${totalUnmarkedDays}</p>
+          </div>
+        </div>
+      </div>
+      <h4 style="font-size:12px;font-weight:600;color:var(--text);margin:10px 0 8px">📅 ক্যালেন্ডার দেখুন</h4>
       <div style="overflow-x:auto;border-radius:10px;border:1px solid var(--border);padding:8px;background:var(--surface2)">
         <div style="min-width:max-content;padding:0 4px">
           <div class="calendar-header">${wdays.map(d=>`<span style="min-width:48px">${d}</span>`).join('')}</div>
@@ -774,11 +820,11 @@ function renderTab(tab) {
       </div>
       ${hdList?`<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px">${hdList}</div>`:''}
       <div style="margin-top:10px;display:flex;gap:7px;flex-wrap:wrap;font-size:11px">
-        <span style="background:var(--success-light);padding:3px 9px;border-radius:6px;color:#065f46">✅ পূর্ণ</span>
-        <span style="background:var(--warning-light);padding:3px 9px;border-radius:6px;color:#92400e">🌓 অর্ধ</span>
+        <span style="background:var(--success-light);padding:3px 9px;border-radius:6px;color:#065f46">✅ পূর্ণ হাজিরা</span>
+        <span style="background:var(--warning-light);padding:3px 9px;border-radius:6px;color:#92400e">🌓 অর্ধবেলা</span>
         <span style="background:var(--danger-light);padding:3px 9px;border-radius:6px;color:#991b1b">❌ অনুপস্থিত</span>
-        <span style="background:var(--purple-light);padding:3px 9px;border-radius:6px;color:#5b21b6">🎉 ছুটি</span>
-        <span style="background:#fff7ed;padding:3px 9px;border-radius:6px;color:#c2410c">💸 অগ্রিম</span>
+        <span style="background:var(--purple-light);padding:3px 9px;border-radius:6px;color:#5b21b6">🎉 ছুটি (পেইড)</span>
+        <span style="background:#fff7ed;padding:3px 9px;border-radius:6px;color:#c2410c">💸 দৈনিক অগ্রিম</span>
       </div>`;
   } else if(tab==='overtime') {
     const daysInMonth=new Date(viewDate.getFullYear(),viewDate.getMonth()+1,0).getDate();
@@ -1002,16 +1048,17 @@ function openSlipModal(){
 function openMonthlyReport(){
   const key=curKey();
   document.getElementById('monthReportLabel').textContent=`${MONTHS_BN[viewDate.getMonth()]} ${viewDate.getFullYear()}`;
-  let html=`<div style="overflow-x:auto"><table class="report-table"><thead><tr><th>শ্রমিক</th><th>গ্রুপ</th><th>পূর্ণ</th><th>অর্ধ</th><th>ছুটি</th><th>দিন</th><th>OT(h)</th><th>মূল</th><th>OT</th><th>বোনাস</th><th>অগ্রিম</th><th>নিট</th></tr></thead><tbody>`;
-  let td=0,te=0;
+  let html=`<div style="overflow-x:auto"><table class="report-table"><thead><tr><th>শ্রমিক</th><th>গ্রুপ</th><th>পূর্ণ</th><th>অর্ধ</th><th>ছুটি</th><th>দিন</th><th>OT(h)</th><th>মূল</th><th>OT</th><th>বোনাস</th><th>অগ্রিম</th><th>দৈনিক অগ্রিম</th><th>নিট</th></tr></thead><tbody>`;
+  let td=0,te=0,totalDailyAdv=0,totalMonthlyAdv=0;
   employees.forEach(emp=>{
     const s=calcEmpStats(emp,key);
     const led=emp.ledger?.[key]||{bonus:0,advance:0};
+    const dailyAdvanceSum = s.dailyAdvTotal||0;
     const cls=s.earned<0?'danger-row':'';
-    td+=s.days;te+=s.earned;
-    html+=`<tr class="${cls}"><td>${emp.name}</td><td>${emp.group||'—'}</td><td>${s.p}</td><td>${s.h}</td><td>${s.hol}</td><td>${s.days}</td><td>${s.otHours}</td><td>৳${(s.days*emp.wage).toLocaleString()}</td><td>৳${(s.otHours*s.otRate).toLocaleString()}</td><td>৳${led.bonus||0}</td><td>৳${led.advance||0}</td><td><strong>${s.earned<0?'ঋণী ':''}৳${Math.abs(s.earned).toLocaleString()}</strong></td></tr>`;
+    td+=s.days;te+=s.earned;totalDailyAdv+=dailyAdvanceSum;totalMonthlyAdv+=led.advance||0;
+    html+=`<tr class="${cls}"><td>${emp.name}</td><td>${emp.group||'—'}</td><td>${s.p}</td><td>${s.h}</td><td>${s.hol}</td><td>${s.days}</td><td>${s.otHours}</td><td>৳${(s.days*emp.wage).toLocaleString()}</td><td>৳${(s.otHours*s.otRate).toLocaleString()}</td><td>৳${led.bonus||0}</td><td>৳${led.advance||0}</td><td>৳${dailyAdvanceSum.toLocaleString()}</td><td><strong>${s.earned<0?'ঋণী ':''}৳${Math.abs(s.earned).toLocaleString()}</strong></td></tr>`;
   });
-  html+=`</tbody><tfoot><tr><td colspan="5"><strong>মোট</strong></td><td><strong>${td}</strong></td><td></td><td colspan="4"></td><td><strong>৳${te.toLocaleString()}</strong></td></tr></tfoot></table></div>`;
+  html+=`</tbody><tfoot><tr><td colspan="5"><strong>মোট</strong></td><td><strong>${td}</strong></td><td></td><td colspan="3"></td><td><strong>৳${totalMonthlyAdv.toLocaleString()}</strong></td><td><strong style="color:#c2410c">৳${totalDailyAdv.toLocaleString()}</strong></td><td><strong style="color:var(--danger)">৳${(te).toLocaleString()}</strong></td></tr></tfoot></table></div>`;
   document.getElementById('monthlyTableContainer').innerHTML=html;
   toggleModal('monthOverlay',true);
 }
@@ -1019,9 +1066,9 @@ function openMonthlyReport(){
 function openYearlyReport(){
   const year=viewDate.getFullYear();
   document.getElementById('reportYear').textContent=year;
-  let html=`<div style="overflow-x:auto"><table class="report-table"><thead><tr><th>শ্রমিক</th><th>গ্রুপ</th><th>হাজিরা</th><th>OT(h)</th><th>মূল আয়</th><th>OT আয়</th><th>বোনাস</th><th>অগ্রিম</th><th>অবস্থা</th></tr></thead><tbody>`;
+  let html=`<div style="overflow-x:auto"><table class="report-table"><thead><tr><th>শ্রমিক</th><th>গ্রুপ</th><th>হাজিরা</th><th>OT(h)</th><th>মূল আয়</th><th>OT আয়</th><th>বোনাস</th><th>মাসিক অগ্রিম</th><th>দৈনিক অগ্রিম</th><th>অবস্থা</th></tr></thead><tbody>`;
   employees.forEach(emp=>{
-    let td2=0,tot=0,tb=0,ta=0;
+    let td2=0,tot=0,tb=0,ta=0,tdailyAdv=0;
     for(let m=0;m<12;m++){
       const k=getKey(year,m);
       const att=emp.attendance?.[k]||{};
@@ -1029,12 +1076,13 @@ function openYearlyReport(){
       tot+=Object.values(emp.overtime?.[k]||{}).reduce((s,v)=>s+(parseFloat(v)||0),0);
       const led=emp.ledger?.[k]||{bonus:0,advance:0};
       tb+=led.bonus||0;ta+=led.advance||0;
+      tdailyAdv+=Object.values(emp.dailyAdvance?.[k]||{}).reduce((s,v)=>s+(parseFloat(v)||0),0);
     }
     const otRate=emp.otRate||Math.round(emp.wage/8);
     const earned=td2*emp.wage;const otE=tot*otRate;
-    const net=earned+otE+tb-ta;
+    const net=earned+otE+tb-ta-tdailyAdv;
     const cls=net<0?'danger-row':'';
-    html+=`<tr class="${cls}"><td>${emp.name}</td><td>${emp.group||'—'}</td><td>${td2}</td><td>${tot}</td><td>৳${earned.toLocaleString()}</td><td>৳${otE.toLocaleString()}</td><td>৳${tb.toLocaleString()}</td><td>৳${ta.toLocaleString()}</td><td><strong>${net<0?'ঋণী ':'পাবে '}৳${Math.abs(net).toLocaleString()}</strong></td></tr>`;
+    html+=`<tr class="${cls}"><td>${emp.name}</td><td>${emp.group||'—'}</td><td>${td2}</td><td>${tot}</td><td>৳${earned.toLocaleString()}</td><td>৳${otE.toLocaleString()}</td><td>৳${tb.toLocaleString()}</td><td>৳${ta.toLocaleString()}</td><td style="color:#c2410c;font-weight:600">৳${tdailyAdv.toLocaleString()}</td><td><strong>${net<0?'ঋণী ':'পাবে '}৳${Math.abs(net).toLocaleString()}</strong></td></tr>`;
   });
   html+=`</tbody></table></div>`;
   document.getElementById('yearlyTableContainer').innerHTML=html;
