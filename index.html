@@ -470,7 +470,24 @@ select.input-field{cursor:pointer}
 
 <script>
 // ===== STATE =====
-let employees = JSON.parse(localStorage.getItem('slp_v3')||'null') || migrateData();
+function initializeEmployees(data){
+  if(!Array.isArray(data))return [];
+  return data.map(e=>({
+    id:e.id||Date.now(),
+    name:e.name||'Unknown',
+    role:e.role||'',
+    group:e.group||'',
+    wage:e.wage||0,
+    otRate:e.otRate||null,
+    photo:e.photo||null,
+    attendance:e.attendance||{},
+    overtime:e.overtime||{},
+    ledger:e.ledger||{},
+    payments:e.payments||[],
+    dailyAdvance:e.dailyAdvance||{}
+  }));
+}
+let employees = initializeEmployees(JSON.parse(localStorage.getItem('slp_v3')||'null')) || migrateData();
 let settings = JSON.parse(localStorage.getItem('slp_settings')||'{}');
 let viewDate = new Date();
 let selectedEmpId = null, selectedDay = null, activeTab = 'hajira';
@@ -495,7 +512,10 @@ function migrateData() {
       photo: e.photo || null,
       otRate: e.otRate || null,
       overtime: e.overtime || {},
-      payments: e.payments || []
+      payments: e.payments || [],
+      dailyAdvance: e.dailyAdvance || {},
+      ledger: e.ledger || {},
+      attendance: e.attendance || {}
     }));
   }
   return [];
@@ -536,6 +556,8 @@ function clearPin() { delete settings.pin; localStorage.setItem('slp_settings', 
 function resetPin() { if (confirm('পিন রিসেট করবেন? সব ডেটা থাকবে।')) { clearPin(); document.getElementById('lockScreen').style.display = 'none'; } }
 
 // ===== CALC =====
+// ===== UTILITIES =====
+function fmt(num){return (num||0).toLocaleString();}
 function getKey(y, m) { return `${y}-${m}`; }
 function curKey() { return getKey(viewDate.getFullYear(), viewDate.getMonth()); }
 
@@ -575,7 +597,7 @@ function renderStats() {
   employees.forEach(e => {
     const s = calcEmpStats(e,key);
     totalDays+=s.days; totalPayable+=s.earned; totalOT+=s.otHours; totalAdv+=(s.dailyAdvTotal||0);
-    const paid=(e.payments||[]).filter(p=>p.type==='salary'&&p.date.startsWith(viewDate.getFullYear()+'-'+(String(viewDate.getMonth()+1).padStart(2,'0')))).reduce((s,p)=>s+p.amount,0);
+    const paid=(e.payments||[]).filter(p=>p.type==='salary'&&p.date.startsWith(viewDate.getFullYear()+'-'+(String(viewDate.getMonth()+1).padStart(2,'0')))).reduce((acc,p)=>acc+p.amount,0);
     totalPaid+=paid;
   });
   const monthCost=totalPayable+totalAdv;
@@ -678,21 +700,19 @@ function pillsHTML(emp, key) {
 
 function renderTab(tab) {
   const emp = employees.find(e=>e.id===selectedEmpId);
+  if(!emp){document.getElementById('tabContent').innerHTML='<p style="color:var(--text-muted)">শ্রমিক খুঁজে পাওয়া যায়নি</p>';return;}
   const key = curKey();
   const s = calcEmpStats(emp, key);
   const led = emp.ledger?.[key]||{bonus:0,advance:0};
   let content = '';
 
   if (tab==='settlement') {
-    const key=curKey();
-    const s=calcEmpStats(emp,key);
-    const led=emp.ledger?.[key]||{bonus:0,advance:0};
-    const paid=(emp.payments||[]).filter(p=>p.type==='salary'&&p.date.startsWith(viewDate.getFullYear()+'-'+(String(viewDate.getMonth()+1).padStart(2,'0')))).reduce((s,p)=>s+p.amount,0);
-    const dailyAdvPaid=(emp.payments||[]).filter(p=>p.type==='daily_advance'&&p.date.startsWith(viewDate.getFullYear()+'-'+(String(viewDate.getMonth()+1).padStart(2,'0')))).reduce((s,p)=>s+p.amount,0);
+    const paid=(emp.payments||[]).filter(p=>p.type==='salary'&&p.date.startsWith(viewDate.getFullYear()+'-'+(String(viewDate.getMonth()+1).padStart(2,'0')))).reduce((acc,p)=>acc+p.amount,0);
+    const dailyAdvPaid=(emp.payments||[]).filter(p=>p.type==='daily_advance'&&p.date.startsWith(viewDate.getFullYear()+'-'+(String(viewDate.getMonth()+1).padStart(2,'0')))).reduce((acc,p)=>acc+p.amount,0);
     const due=s.earned-paid;
     
-    const yearlyAdvance=(()=>{let total=0;for(let m=0;m<12;m++){const k=getKey(viewDate.getFullYear(),m);total+=Object.values(emp.dailyAdvance?.[k]||{}).reduce((s,v)=>s+(parseFloat(v)||0),0);}return total;})();
     const monthlyAdvance=s.dailyAdvTotal||0;
+    const yearlyAdvance=(()=>{let total=0;for(let m=0;m<12;m++){const k=getKey(viewDate.getFullYear(),m);total+=Object.values(emp.dailyAdvance?.[k]||{}).reduce((s,v)=>s+(parseFloat(v)||0),0);}return total;})();
     
     content=`${pillsHTML(emp,key)}
       <div style="display:grid;gap:12px;margin-bottom:16px">
@@ -775,7 +795,6 @@ function renderTab(tab) {
     const totalAbsent = Object.values(att).filter(v=>v==='a').length;
     const totalHolidays = Object.values(att).filter(v=>v==='holiday').length;
     const totalAdvanceDays = Object.keys(emp.dailyAdvance?.[key]||{}).length;
-    const daysInMonth = new Date(viewDate.getFullYear(),viewDate.getMonth()+1,0).getDate();
     const totalWorkedDays = totalFullDays + totalHalfDays + totalHolidays;
     const totalUnmarkedDays = daysInMonth - totalWorkedDays - totalAbsent;
     
@@ -1014,7 +1033,7 @@ function openSlipModal(){
   const s=calcEmpStats(emp,key);
   const led=emp.ledger?.[key]||{bonus:0,advance:0};
   const org=settings.orgName||'স্মার্ট লেবার প্রো';
-  const totalPaid=(emp.payments||[]).filter(p=>p.type==='salary'&&p.date.startsWith(viewDate.getFullYear()+'-'+(String(viewDate.getMonth()+1).padStart(2,'0')))).reduce((s,p)=>s+p.amount,0);
+  const totalPaid=(emp.payments||[]).filter(p=>p.type==='salary'&&p.date.startsWith(viewDate.getFullYear()+'-'+(String(viewDate.getMonth()+1).padStart(2,'0')))).reduce((acc,p)=>acc+p.amount,0);
   document.getElementById('slipContent').innerHTML=`
     <div class="slip">
       <div class="slip-logo">🏗 ${org}</div>
@@ -1073,10 +1092,10 @@ function openYearlyReport(){
       const k=getKey(year,m);
       const att=emp.attendance?.[k]||{};
       Object.values(att).forEach(v=>{if(v==='p')td2++;else if(v==='h')td2+=.5;else if(v==='holiday')td2++;});
-      tot+=Object.values(emp.overtime?.[k]||{}).reduce((s,v)=>s+(parseFloat(v)||0),0);
+      tot+=Object.values(emp.overtime?.[k]||{}).reduce((acc,v)=>acc+(parseFloat(v)||0),0);
       const led=emp.ledger?.[k]||{bonus:0,advance:0};
       tb+=led.bonus||0;ta+=led.advance||0;
-      tdailyAdv+=Object.values(emp.dailyAdvance?.[k]||{}).reduce((s,v)=>s+(parseFloat(v)||0),0);
+      tdailyAdv+=Object.values(emp.dailyAdvance?.[k]||{}).reduce((acc,v)=>acc+(parseFloat(v)||0),0);
     }
     const otRate=emp.otRate||Math.round(emp.wage/8);
     const earned=td2*emp.wage;const otE=tot*otRate;
@@ -1139,26 +1158,31 @@ let globalChartInst=null;
 function openChartModal(){
   toggleModal('chartOverlay',true);
   setTimeout(()=>{
-    const el=document.getElementById('chartContent');
-    el.innerHTML=`<div class="chart-wrap"><canvas id="globalChart" height="260"></canvas></div>`;
-    const key=curKey();
-    const isDark=document.documentElement.getAttribute('data-theme')==='dark';
-    const gridColor=isDark?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.06)';
-    const labels=employees.map(e=>e.name.length>6?e.name.slice(0,6)+'…':e.name);
-    const attData=employees.map(e=>calcEmpStats(e,key).days);
-    const earnData=employees.map(e=>calcEmpStats(e,key).earned);
-    if(globalChartInst){globalChartInst.destroy();}
-    globalChartInst=new Chart(document.getElementById('globalChart'),{
-      type:'bar',
-      data:{labels,datasets:[
-        {label:'হাজিরা (দিন)',data:attData,backgroundColor:'rgba(67,97,238,0.75)'},
-        {label:'পাওনা (৳)',data:earnData,backgroundColor:'rgba(16,185,129,0.75)'}
-      ]},
-      options:{responsive:true,plugins:{legend:{labels:{color:isDark?'#94a3b8':'#64748b',font:{size:11}}}},scales:{
-        x:{ticks:{color:isDark?'#94a3b8':'#64748b',font:{size:10}},grid:{color:gridColor}},
-        y:{ticks:{color:isDark?'#94a3b8':'#64748b'},grid:{color:gridColor}}
-      }}
-    });
+    try{
+      const el=document.getElementById('chartContent');
+      if(!el)return;
+      el.innerHTML=`<div class="chart-wrap"><canvas id="globalChart" height="260"></canvas></div>`;
+      const key=curKey();
+      const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+      const gridColor=isDark?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.06)';
+      const labels=employees.map(e=>e.name.length>6?e.name.slice(0,6)+'…':e.name);
+      const attData=employees.map(e=>calcEmpStats(e,key).days);
+      const earnData=employees.map(e=>calcEmpStats(e,key).earned);
+      if(globalChartInst){globalChartInst.destroy();}
+      const chartEl=document.getElementById('globalChart');
+      if(!chartEl)return;
+      globalChartInst=new Chart(chartEl,{
+        type:'bar',
+        data:{labels,datasets:[
+          {label:'হাজিরা (দিন)',data:attData,backgroundColor:'rgba(67,97,238,0.75)'},
+          {label:'পাওনা (৳)',data:earnData,backgroundColor:'rgba(16,185,129,0.75)'}
+        ]},
+        options:{responsive:true,plugins:{legend:{labels:{color:isDark?'#94a3b8':'#64748b',font:{size:11}}}},scales:{
+          x:{ticks:{color:isDark?'#94a3b8':'#64748b',font:{size:10}},grid:{color:gridColor}},
+          y:{ticks:{color:isDark?'#94a3b8':'#64748b'},grid:{color:gridColor}}
+        }}
+      });
+    }catch(e){console.error('Chart error:',e);}
   },80);
 }
 
@@ -1166,7 +1190,7 @@ function openChartModal(){
 function calcEidBonus(){
   const pct=(parseFloat(document.getElementById('eidPct').value)||100)/100;
   const rows=employees.map(e=>`<li style="padding:5px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between"><span>${e.name}</span><strong>৳${Math.round(e.wage*26*pct).toLocaleString()}</strong></li>`).join('');
-  const total=employees.reduce((s,e)=>s+Math.round(e.wage*26*pct),0);
+  const total=employees.reduce((acc,e)=>acc+Math.round(e.wage*26*pct),0);
   document.getElementById('eidResult').innerHTML=`<ul style="list-style:none;margin-top:8px">${rows}</ul><p style="margin-top:8px;font-weight:700;color:var(--primary)">মোট ঈদ বোনাস: ৳${total.toLocaleString()}</p><small style="color:var(--text-muted)">(২৬ কর্মদিবস ভিত্তিক)</small>`;
 }
 
@@ -1198,14 +1222,43 @@ function openAddModal(){
   toggleModal('addModal',true);
 }
 function addEmployee(){
-  const name=document.getElementById('nameInp').value.trim();
-  const role=document.getElementById('roleInp').value.trim();
-  const group=document.getElementById('groupInp').value.trim();
-  const wage=parseInt(document.getElementById('wageInp').value);
-  const otRate=parseInt(document.getElementById('otRateInp').value)||null;
-  if(!name||!wage)return alert('নাম ও বেতন আবশ্যক');
-  employees.push({id:Date.now(),name,role,group,wage,otRate,photo:tempPhotoData,attendance:{},overtime:{},ledger:{},payments:[]});
-  save();toggleModal('addModal',false);
+  try{
+    const name=document.getElementById('nameInp').value.trim();
+    const role=document.getElementById('roleInp').value.trim();
+    const group=document.getElementById('groupInp').value.trim();
+    const wage=parseInt(document.getElementById('wageInp').value);
+    const otRate=parseInt(document.getElementById('otRateInp').value)||null;
+    if(!name||!wage){alert('নাম ও বেতন আবশ্যক');return;}
+    if(isNaN(wage)||wage<=0){alert('বেতন একটি সঠিক সংখ্যা হতে হবে');return;}
+    const newEmp={
+      id:Date.now(),
+      name,
+      role,
+      group,
+      wage,
+      otRate,
+      photo:tempPhotoData||null,
+      attendance:{},
+      overtime:{},
+      ledger:{},
+      payments:[],
+      dailyAdvance:{}
+    };
+    employees.push(newEmp);
+    save();
+    document.getElementById('nameInp').value='';
+    document.getElementById('roleInp').value='';
+    document.getElementById('groupInp').value='';
+    document.getElementById('wageInp').value='';
+    document.getElementById('otRateInp').value='';
+    document.getElementById('photoPreview').innerHTML='📷 ছবি যোগ করুন';
+    tempPhotoData=null;
+    toggleModal('addModal',false);
+    alert('শ্রমিক সফলভাবে যোগ হয়েছে!');
+  }catch(e){
+    console.error('Error adding employee:',e);
+    alert('ত্রুটি: শ্রমিক যোগ করতে পারা যায়নি। ফিরে চেষ্টা করুন।');
+  }
 }
 function deleteEmp(id){
   if(confirm('এই শ্রমিককে মুছে ফেলতে চান?')){
@@ -1259,9 +1312,19 @@ function toggleDark(){
 
 // ===== INIT =====
 (function init(){
+  // Ensure all employees have required fields
+  employees.forEach((e,i)=>{
+    if(!e.dailyAdvance)e.dailyAdvance={};
+    if(!e.attendance)e.attendance={};
+    if(!e.overtime)e.overtime={};
+    if(!e.ledger)e.ledger={};
+    if(!e.payments)e.payments=[];
+    if(!e.group)e.group='';
+  });
   const theme=localStorage.getItem('slp_theme')||'light';
   document.documentElement.setAttribute('data-theme',theme);
-  document.getElementById('darkBtn').textContent=theme==='dark'?'☀️':'🌙';
+  const darkBtn=document.getElementById('darkBtn');
+  if(darkBtn)darkBtn.textContent=theme==='dark'?'☀️':'🌙';
   renderHome();
   initLock();
 })();
