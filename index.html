@@ -9,7 +9,7 @@
   <!-- Google Fonts: Nikosh, Orbitron, Hind Siliguri -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Orbitron:wght@600;700;800;900&display=swap" rel="stylesheet">
   <link href="https://fonts.maateen.me/nikosh/font.css" rel="stylesheet">
 
   <!-- Tailwind CSS CDN -->
@@ -27,12 +27,12 @@
     }
   </script>
 
-  <!-- React, ReactDOM, Babel for Single-File Execution -->
+  <!-- React 18, ReactDOM, Babel (Single File Standalone Execution) -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  <!-- Three.js for 3D Architectural Blueprint -->
+  <!-- Three.js CDN for 3D Architectural Blueprint -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
   <style>
@@ -56,10 +56,10 @@
       font-family: inherit;
     }
     .glass-panel {
-      background: rgba(11, 19, 43, 0.75);
+      background: rgba(11, 19, 43, 0.8);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(0, 242, 254, 0.2);
+      border: 1px solid rgba(0, 242, 254, 0.22);
       border-radius: 1rem;
     }
     @media print {
@@ -74,6 +74,10 @@
         border: 1px solid #ccc !important;
         background: none !important;
         box-shadow: none !important;
+        color: #000000 !important;
+      }
+      table {
+        color: #000000 !important;
       }
     }
   </style>
@@ -81,11 +85,11 @@
 <body>
   <div id="root"></div>
 
-  <!-- Main React Application Script -->
+  <!-- React Application Source Code -->
   <script type="text/babel">
     const { useState, useEffect, useMemo, useRef } = React;
 
-    // --- বাংলা তারিখ ও সংখ্যা সহায়তা ফাংশন ---
+    // --- বাংলা তারিখ ও সংখ্যা হেল্পার ---
     const BANGLA_MONTHS = [
       'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
       'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'
@@ -136,7 +140,7 @@
       { id: 'rec-aug-2', workerId: 'w-1', date: '2026-08-25', days: 3, paid: 1500, advance: 0, note: 'গ্রাউন্ড ফ্লোর কলাম' }
     ];
 
-    // --- ৩ডি আর্কিটেকচারাল ব্লুপ্রিন্ট ব্যাকগ্রাউন্ড ---
+    // --- ৩ডি আর্কিটেকচারাল ব্যাকগ্রাউন্ড ---
     function ThreeBackground() {
       const containerRef = useRef(null);
 
@@ -155,7 +159,6 @@
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         container.appendChild(renderer.domElement);
 
-        // আর্কিটেকচারাল গ্রিড ও টাওয়ার গ্রুপ
         const group = new THREE.Group();
         scene.add(group);
 
@@ -163,10 +166,8 @@
         gridHelper.position.y = -5;
         scene.add(gridHelper);
 
-        // টাওয়ার ফ্রেম কলাম ও স্ল্যাব
         const columnGeo = new THREE.BoxGeometry(0.3, 14, 0.3);
         const columnMat = new THREE.MeshBasicMaterial({ color: 0x00f2fe, wireframe: true });
-        
         for (let x of [-4, 0, 4]) {
           for (let z of [-4, 0, 4]) {
             const col = new THREE.Mesh(columnGeo, columnMat);
@@ -186,7 +187,7 @@
         let animationFrameId;
         const animate = () => {
           animationFrameId = requestAnimationFrame(animate);
-          group.rotation.y += 0.003;
+          group.rotation.y += 0.0025;
           renderer.render(scene, camera);
         };
         animate();
@@ -207,12 +208,11 @@
         };
       }, []);
 
-      return <div id="three-canvas-container" ref={containerRef} className="fixed inset-0 pointer-events-none z-0 opacity-45" />;
+      return <div id="three-canvas-container" ref={containerRef} className="fixed inset-0 pointer-events-none z-0 opacity-40" />;
     }
 
-    // --- প্রধান অ্যাপ কম্পোনেন্ট ---
+    // --- প্রধান অ্যাপ্লিকেশন কম্পোনেন্ট ---
     function App() {
-      // লোকাল স্টোরেজ থেকে ডেটা লোড
       const [workers, setWorkers] = useState(() => {
         try {
           const saved = localStorage.getItem('monsur_workers');
@@ -231,7 +231,6 @@
         }
       });
 
-      // লোকাল স্টোরেজ আপডেট
       useEffect(() => {
         localStorage.setItem('monsur_workers', JSON.stringify(workers));
       }, [workers]);
@@ -240,20 +239,19 @@
         localStorage.setItem('monsur_records', JSON.stringify(records));
       }, [records]);
 
-      // ফিল্টার স্টেট (বছর ও মাস)
       const [selectedYear, setSelectedYear] = useState(2026);
-      const [selectedMonth, setSelectedMonth] = useState('all'); // 'all' বা ১-১২
-      const [mobileViewMode, setMobileViewMode] = useState('cards'); // 'cards' বা 'table'
+      const [selectedMonth, setSelectedMonth] = useState('all');
+      const [mobileViewMode, setMobileViewMode] = useState('cards');
       const [searchQuery, setSearchQuery] = useState('');
       const [filterStatus, setFilterStatus] = useState('all');
 
-      // নতুন লেবার ফর্ম স্টেট
+      // নতুন শ্রমিক ফর্ম স্টেট
       const [newWorkerName, setNewWorkerName] = useState('');
       const [newWorkerWage, setNewWorkerWage] = useState('');
       const [newWorkerTrade, setNewWorkerTrade] = useState('রাজমিস্ত্রি');
       const [newWorkerPhone, setNewWorkerPhone] = useState('');
 
-      // দৈনিক লেনদেন ফর্ম স্টেট
+      // দৈনিক হাজিরা ও লেনদেন ফর্ম স্টেট
       const [selectedWorkerId, setSelectedWorkerId] = useState(workers[0]?.id || '');
       const [txDate, setTxDate] = useState(() => new Date().toISOString().split('T')[0]);
       const [txDays, setTxDays] = useState('1');
@@ -261,17 +259,16 @@
       const [txAdvance, setTxAdvance] = useState('0');
       const [txNote, setTxNote] = useState('');
 
-      // মডাল স্টেট
+      // বিস্তারিত খতিয়ান মডাল স্টেট
       const [detailWorker, setDetailWorker] = useState(null);
 
-      // উপলব্ধ বছর বের করা
       const availableYears = useMemo(() => {
         const set = new Set([2026]);
         records.forEach(r => set.add(parseDate(r.date).year));
         return Array.from(set).sort((a, b) => b - a);
       }, [records]);
 
-      // নির্দিষ্ট সময়কালের সামারি ক্যালকুলেশন
+      // শ্রমিকদের সামারি হিসাব
       const summaries = useMemo(() => {
         return workers.map(worker => {
           const workerRecords = records.filter(r => {
@@ -297,8 +294,8 @@
           const balance = totalEarned - totalReceived;
 
           let status = 'settled';
-          if (balance < 0) status = 'claim'; // কোম্পানি পাবে
-          else if (balance > 0) status = 'due'; // লেবার পাবে
+          if (balance < 0) status = 'claim';
+          else if (balance > 0) status = 'due';
 
           return {
             worker,
@@ -314,7 +311,7 @@
         });
       }, [workers, records, selectedYear, selectedMonth]);
 
-      // সার্চ ও স্ট্যাটাস ফিল্টার
+      // ফিল্টারকৃত সামারি তালিকা
       const filteredSummaries = useMemo(() => {
         return summaries.filter(s => {
           const matchesSearch = s.worker.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -324,20 +321,38 @@
         });
       }, [summaries, searchQuery, filterStatus]);
 
-      // সার্বিক মোট পরিসংখ্যান
-      const stats = useMemo(() => {
-        let totalClaim = 0;
-        let totalDue = 0;
-        let totalDays = 0;
-        summaries.forEach(s => {
-          totalDays += s.totalDays;
-          if (s.balance < 0) totalClaim += Math.abs(s.balance);
-          else if (s.balance > 0) totalDue += s.balance;
-        });
-        return { totalClaim, totalDue, totalDays };
-      }, [summaries]);
+      // ফিল্টারকৃত মোট সমষ্টি ও ব্যালেন্স হিসাব
+      const aggregate = useMemo(() => {
+        let days = 0;
+        let earned = 0;
+        let paid = 0;
+        let advance = 0;
+        let claim = 0;
+        let claimCount = 0;
+        let due = 0;
+        let dueCount = 0;
+        let settledCount = 0;
 
-      // নতুন লেবার যোগ
+        filteredSummaries.forEach(s => {
+          days += s.totalDays;
+          earned += s.totalEarned;
+          paid += s.totalPaid;
+          advance += s.totalAdvance;
+          if (s.status === 'claim') {
+            claim += Math.abs(s.balance);
+            claimCount += 1;
+          } else if (s.status === 'due') {
+            due += s.balance;
+            dueCount += 1;
+          } else {
+            settledCount += 1;
+          }
+        });
+
+        const totalGiven = paid + advance;
+        return { days, earned, paid, advance, totalGiven, claim, claimCount, due, dueCount, settledCount };
+      }, [filteredSummaries]);
+
       const handleAddWorker = (e) => {
         e.preventDefault();
         if (!newWorkerName.trim() || !newWorkerWage) return;
@@ -356,7 +371,6 @@
         alert('নতুন লেবার সফলভাবে যুক্ত হয়েছে!');
       };
 
-      // দৈনিক এন্ট্রি যোগ
       const handleAddTransaction = (e) => {
         e.preventDefault();
         if (!selectedWorkerId) return;
@@ -376,18 +390,16 @@
         alert('দৈনিক হাজিরা ও লেনদেন সফলভাবে সংরক্ষিত হয়েছে!');
       };
 
-      // লেবার ডিলিট
       const handleDeleteWorker = (workerId) => {
-        if (confirm('আপনি কি নিশ্চিত যে এই লেবারের সমস্ত খতিয়ান ডিলিট করতে চান?')) {
+        if (confirm('আপনি কি নিশ্চিত যে এই লেবারের সমস্ত খতিয়ান মুছে ফেলতে চান?')) {
           setWorkers(workers.filter(w => w.id !== workerId));
           setRecords(records.filter(r => r.workerId !== workerId));
         }
       };
 
-      // CSV এক্সপোর্ট
       const handleExportCSV = () => {
-        const headers = ['নাম', 'ট্রেড', 'দৈনিক রেট', 'হাজিরা দিন', 'অর্জিত আয়', 'মজুরি পরিশোধ', 'অগ্রিম', 'ব্যালেন্স'];
-        const rows = summaries.map(s => [
+        const headers = ['নাম', 'ট্রেড', 'দৈনিক রেট', 'হাজিরা দিন', 'অর্জিত আয়', 'মজুরি পরিশোধ', 'অগ্রিম প্রদান', 'বর্তমান ব্যালেন্স'];
+        const rows = filteredSummaries.map(s => [
           `"${s.worker.name}"`,
           `"${s.worker.trade || ''}"`,
           s.worker.dailyWage,
@@ -407,8 +419,8 @@
         document.body.removeChild(link);
       };
 
-      const periodText = selectedYear === 'all' 
-        ? 'সকল বছরের হিসাব' 
+      const periodText = selectedYear === 'all'
+        ? 'সকল বছরের হিসাব'
         : `${toBanglaNumber(selectedYear)} সাল ${selectedMonth === 'all' ? '(বাৎসরিক)' : `(${BANGLA_MONTHS[selectedMonth - 1]})`}`;
 
       return (
@@ -419,7 +431,7 @@
             {/* হেডার */}
             <header className="text-center mb-6">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#00f2fe]/10 border border-[#00f2fe]/30 text-[#00f2fe] text-xs sm:text-sm mb-3 font-semibold shadow-[0_0_15px_rgba(0,242,254,0.2)]">
-                <span>🏗️ মনসুর লেবার কন্ট্রোল সিস্টেম</span>
+                <span>🏗️ আর্কিটেকচারাল লেবার কন্ট্রোল সিস্টেম</span>
               </div>
               <h1 className="text-3xl sm:text-5xl font-black font-orbitron tracking-wide bg-gradient-to-r from-[#00f2fe] via-[#4facfe] to-[#00f2fe] bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(0,242,254,0.4)]">
                 MONSUR LABOR PORTAL
@@ -428,11 +440,11 @@
                 মনসুর লেবার পোর্টাল
               </div>
               <p className="text-slate-300 text-sm sm:text-base mt-2 max-w-xl mx-auto">
-                বাৎসরিক ও মাসিক হিসাব অডিট, দৈনিক হাজিরা এন্ট্রি ও ব্যালেন্স খতিয়ান
+                বাৎসরিক ও মাসিক অডিট লেজার, দৈনিক হাজিরা এন্ট্রি ও রিয়েল-টাইম ব্যালেন্স হিসাব
               </p>
             </header>
 
-            {/* বছর ও মাস নির্বাচন বার */}
+            {/* ফিল্টার বার: বছর ও মাস */}
             <div className="glass-panel p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                 <span className="text-sm font-bold text-[#00f2fe]">বছর:</span>
@@ -472,29 +484,29 @@
               </div>
             </div>
 
-            {/* পরিসংখ্যান কার্ড */}
+            {/* পরিসংখ্যান কার্ড ওভারভিউ */}
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
               <div className="glass-panel p-4">
-                <div className="text-xs text-slate-400">সময়কাল</div>
+                <div className="text-xs text-slate-400">নির্বাচিত সময়কাল</div>
                 <div className="text-base font-bold text-white mt-1">{periodText}</div>
               </div>
               <div className="glass-panel p-4">
                 <div className="text-xs text-slate-400">মোট কার্যদিবস (হাজিরা)</div>
-                <div className="text-2xl font-bold font-orbitron text-cyan-300 mt-1">{stats.totalDays} দিন</div>
+                <div className="text-2xl font-bold font-orbitron text-cyan-300 mt-1">{aggregate.days} দিন</div>
               </div>
               <div className="glass-panel p-4 border-l-4 border-l-[#ff416c]">
                 <div className="text-xs text-[#ff416c] font-semibold">কোম্পানি পাবে (অগ্রিম দাবি)</div>
-                <div className="text-2xl font-bold font-orbitron text-[#ff416c] mt-1">৳{stats.totalClaim.toLocaleString()}</div>
+                <div className="text-2xl font-bold font-orbitron text-[#ff416c] mt-1">৳{aggregate.claim.toLocaleString()}</div>
               </div>
               <div className="glass-panel p-4 border-l-4 border-l-[#00f2fe]">
                 <div className="text-xs text-[#00f2fe] font-semibold">লেবার পাবে (বকেয়া মজুরি)</div>
-                <div className="text-2xl font-bold font-orbitron text-[#00f2fe] mt-1">৳{stats.totalDue.toLocaleString()}</div>
+                <div className="text-2xl font-bold font-orbitron text-[#00f2fe] mt-1">৳{aggregate.due.toLocaleString()}</div>
               </div>
             </div>
 
-            {/* অ্যাকশন গ্রিড: নতুন লেবার ও দৈনিক লেনদেন ফর্ম */}
+            {/* ফরম সেকশন: নতুন শ্রমিক ও দৈনিক হাজিরা/লেনদেন */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              {/* ফর্ম ১: নতুন শ্রমিক রেজিস্ট্রেশন */}
+              {/* ফর্ম ১: শ্রমিক রেজিস্ট্রেশন */}
               <div className="glass-panel p-5">
                 <h3 className="text-lg font-bold text-[#00f2fe] mb-4 flex items-center gap-2">
                   <span>➕ নতুন শ্রমিক রেজিস্ট্রেশন</span>
@@ -561,7 +573,7 @@
                 </form>
               </div>
 
-              {/* ফর্ম ২: দৈনিক লেনদেন ও হাজিরা এন্ট্রি */}
+              {/* ফর্ম ২: দৈনিক হাজিরা ও লেনদেন */}
               <div className="glass-panel p-5">
                 <h3 className="text-lg font-bold text-[#4facfe] mb-4 flex items-center gap-2">
                   <span>📝 দৈনিক হাজিরা ও লেনদেন এন্ট্রি</span>
@@ -623,7 +635,7 @@
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-300 mb-1">কাজের নোট / বিবরণ</label>
+                    <label className="block text-xs text-slate-300 mb-1">কাজের বিবরণ / নোট</label>
                     <input
                       type="text"
                       value={txNote}
@@ -642,36 +654,46 @@
               </div>
             </div>
 
-            {/* টেবিল ও মোবাইল কার্ড হেডার কন্ট্রোল */}
+            {/* SummaryTable সেকশন */}
             <div className="glass-panel p-5 mb-8">
+              {/* টুলবার */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
                 <div>
                   <h2 className="text-xl font-bold text-white flex items-center gap-2">
                     <span>📊 ব্যালেন্স অডিট ও খতিয়ান</span>
                     <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#00f2fe]/20 text-[#00f2fe] font-semibold">
-                      {summaries.length} জন লেবার
+                      {filteredSummaries.length} জন লেবার
                     </span>
                   </h2>
-                  <p className="text-xs text-slate-400 mt-1">{periodText}-এর সার্বিক আর্থিক রিপোর্ট</p>
+                  <p className="text-xs text-slate-400 mt-1">{periodText}-এর সার্বিক আর্থিক লেজার</p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="নাম বা পদবি দিয়ে খুঁজুন..."
+                      className="px-3 py-1.5 rounded-xl bg-black/40 border border-white/20 text-xs text-white placeholder:text-slate-400 focus:border-[#00f2fe] outline-none"
+                    />
+                  </div>
                   <button
                     onClick={handleExportCSV}
-                    className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-xs text-cyan-300 font-semibold transition-all"
+                    className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-xs text-cyan-300 font-semibold transition-all cursor-pointer"
                   >
-                    📥 এক্সেল (CSV) এক্সপোর্ট
+                    📥 এক্সেল এক্সপোর্ট
                   </button>
                   <button
                     onClick={() => window.print()}
-                    className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-xs text-white font-semibold transition-all"
+                    className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-xs text-white font-semibold transition-all cursor-pointer"
                   >
-                    🖨️ প্রিন্ট খতিয়ান
+                    🖨️ প্রিন্ট
                   </button>
                 </div>
               </div>
 
-              {/* ফিল্টার এবং মোবাইল ভিউ টগল */}
+              {/* ফিল্টার বাটন ও মোবাইল সুইচ */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 my-4">
                 <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
                   <button
@@ -694,7 +716,6 @@
                   </button>
                 </div>
 
-                {/* মোবাইল স্ক্রিন সুইচ: কার্ড বনাম টেবিল */}
                 <div className="flex sm:hidden items-center self-end bg-black/40 p-1 rounded-xl border border-white/10 text-xs">
                   <button
                     onClick={() => setMobileViewMode('cards')}
@@ -713,7 +734,7 @@
 
               {/* মোবাইল কার্ড ভিউ */}
               {mobileViewMode === 'cards' && (
-                <div className="block sm:hidden space-y-3.5">
+                <div className="block sm:hidden space-y-3.5 mb-6">
                   {filteredSummaries.map(s => (
                     <div key={s.worker.id} className="p-4 rounded-xl bg-black/40 border border-white/10 space-y-3">
                       <div className="flex items-start justify-between">
@@ -733,11 +754,11 @@
                           <span className="font-bold text-cyan-300 font-orbitron">{s.totalDays} দিন</span>
                         </div>
                         <div>
-                          <span className="text-slate-400 block">পরিশোধ</span>
+                          <span className="text-slate-400 block">মজুরি পরিশোধ</span>
                           <span className="font-bold text-slate-200 font-orbitron">৳{s.totalPaid}</span>
                         </div>
                         <div>
-                          <span className="text-slate-400 block text-[#ff416c]">অগ্রিম</span>
+                          <span className="text-slate-400 block text-[#ff416c]">মোট অগ্রিম</span>
                           <span className="font-bold text-[#ff416c] font-orbitron">৳{s.totalAdvance}</span>
                         </div>
                       </div>
@@ -746,7 +767,7 @@
                         <span className="text-xs text-slate-300 font-medium">ব্যালেন্স স্থিতি:</span>
                         {s.status === 'claim' && (
                           <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#ff416c]/20 text-[#ff416c] border border-[#ff416c]/40">
-                            আপনি পাবেন: ৳{Math.abs(s.balance).toLocaleString()}
+                            কোম্পানি পাবে: ৳{Math.abs(s.balance).toLocaleString()}
                           </span>
                         )}
                         {s.status === 'due' && (
@@ -764,15 +785,15 @@
                       <div className="flex items-center gap-2 pt-2 border-t border-white/10">
                         <button
                           onClick={() => setDetailWorker(s.worker)}
-                          className="flex-1 py-2 rounded-lg bg-[#00f2fe]/20 text-[#00f2fe] text-xs font-bold"
+                          className="flex-1 py-2.5 rounded-lg bg-[#00f2fe]/20 text-[#00f2fe] text-xs font-bold"
                         >
                           বিস্তারিত খতিয়ান
                         </button>
                         <button
                           onClick={() => handleDeleteWorker(s.worker.id)}
-                          className="px-3 py-2 rounded-lg bg-red-500/20 text-red-400 text-xs font-bold"
+                          className="px-3 py-2.5 rounded-lg bg-red-500/20 text-red-400 text-xs font-bold"
                         >
-                          ডিলিট
+                          মুছুন
                         </button>
                       </div>
                     </div>
@@ -780,18 +801,18 @@
                 </div>
               )}
 
-              {/* স্ট্যান্ডার্ড টেবিল ভিউ */}
-              <div className={`${mobileViewMode === 'cards' ? 'hidden sm:block' : 'block'} overflow-x-auto`}>
-                <table className="w-full text-left text-sm">
+              {/* স্ট্যান্ডার্ড টেবিল ভিউ ও কাঙ্ক্ষিত ফুটার রো */}
+              <div className={`${mobileViewMode === 'cards' ? 'hidden sm:block' : 'block'} overflow-x-auto rounded-xl border border-white/10 bg-[#080d1e]/60`}>
+                <table className="w-full text-left text-sm border-collapse">
                   <thead>
-                    <tr className="border-b border-white/10 text-slate-400 text-xs bg-white/5">
-                      <th className="py-3 px-3">শ্রমিকের নাম ও পদবি</th>
-                      <th className="py-3 px-3 text-right">দৈনিক রেট</th>
-                      <th className="py-3 px-3 text-center">হাজিরা</th>
-                      <th className="py-3 px-3 text-right">মোট আয়</th>
-                      <th className="py-3 px-3 text-right">মজুরি পরিশোধ</th>
-                      <th className="py-3 px-3 text-right text-[#ff416c]">অগ্রিম</th>
-                      <th className="py-3 px-3 text-right">বর্তমান ব্যালেন্স</th>
+                    <tr className="border-b border-white/10 text-[#00f2fe] text-xs bg-[#00f2fe]/8">
+                      <th className="py-3 px-3">লেবারের নাম ও পদবি</th>
+                      <th className="py-3 px-3 text-right">রেট/দিন</th>
+                      <th className="py-3 px-3 text-center">মোট দিন</th>
+                      <th className="py-3 px-3 text-right">অর্জিত আয়</th>
+                      <th className="py-3 px-3 text-right">পরিশোধিত মজুরি</th>
+                      <th className="py-3 px-3 text-right text-[#ff416c]">মোট অ্যাডভান্স</th>
+                      <th className="py-3 px-3 text-center">বর্তমান স্থিতি ও ব্যালেন্স</th>
                       <th className="py-3 px-3 text-center">অ্যাকশন</th>
                     </tr>
                   </thead>
@@ -807,10 +828,20 @@
                         <td className="py-3 px-3 text-right font-orbitron">৳{s.totalEarned.toLocaleString()}</td>
                         <td className="py-3 px-3 text-right font-orbitron text-slate-200">৳{s.totalPaid.toLocaleString()}</td>
                         <td className="py-3 px-3 text-right font-orbitron text-[#ff416c]">৳{s.totalAdvance.toLocaleString()}</td>
-                        <td className="py-3 px-3 text-right font-bold font-orbitron">
-                          {s.status === 'claim' && <span className="text-[#ff416c]">পাবেন: ৳{Math.abs(s.balance).toLocaleString()}</span>}
-                          {s.status === 'due' && <span className="text-[#00f2fe]">পাবে: ৳{s.balance.toLocaleString()}</span>}
-                          {s.status === 'settled' && <span className="text-slate-400">পরিশোধিত</span>}
+                        <td className="py-3 px-3 text-center font-bold">
+                          {s.status === 'claim' && (
+                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#ff416c]/20 text-[#ff416c] border border-[#ff416c]/40">
+                              কোম্পানি পাবে: ৳{Math.abs(s.balance).toLocaleString()}
+                            </span>
+                          )}
+                          {s.status === 'due' && (
+                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-cyan-400/20 text-cyan-300 border border-cyan-400/40">
+                              লেবার পাবে: ৳{s.balance.toLocaleString()}
+                            </span>
+                          )}
+                          {s.status === 'settled' && (
+                            <span className="text-slate-400 text-xs font-normal">পরিশোধিত (৳ ০)</span>
+                          )}
                         </td>
                         <td className="py-3 px-3 text-center">
                           <div className="flex items-center justify-center gap-1.5">
@@ -831,19 +862,233 @@
                       </tr>
                     ))}
                   </tbody>
+
+                  {/* সম্পূর্ণ ফুটার রো যেখানে মোট মজুরি, মোট অ্যাডভান্স এবং সামগ্রিক ব্যালেন্স রয়েছে */}
+                  {filteredSummaries.length > 0 && (
+                    <tfoot className="bg-[#0b1329] font-semibold text-xs border-t-2 border-white/20 text-slate-300">
+                      {/* ফুটার রো ১: কলামভিত্তিক স্পষ্ট মোট হিসাব */}
+                      <tr className="border-b border-white/10">
+                        <td className="py-3.5 px-3 text-left font-bold text-white">
+                          <span>ফিল্টারকৃত মোট ({filteredSummaries.length} জন)</span>
+                        </td>
+                        <td className="py-3.5 px-3 text-right text-slate-400">-</td>
+                        <td className="py-3.5 px-3 text-center font-orbitron text-cyan-300 font-bold">
+                          {aggregate.days} দিন
+                        </td>
+                        <td className="py-3.5 px-3 text-right font-orbitron text-white font-bold">
+                          ৳{aggregate.earned.toLocaleString()}
+                        </td>
+                        <td className="py-3.5 px-3 text-right font-orbitron text-emerald-400 font-bold">
+                          <span className="text-[10px] text-slate-400 block font-normal">মোট মজুরি</span>
+                          ৳{aggregate.paid.toLocaleString()}
+                        </td>
+                        <td className="py-3.5 px-3 text-right font-orbitron text-[#ff416c] font-bold">
+                          <span className="text-[10px] text-slate-400 block font-normal">মোট অ্যাডভান্স</span>
+                          ৳{aggregate.advance.toLocaleString()}
+                        </td>
+                        <td className="py-3.5 px-3 text-center">
+                          <div className="flex flex-col gap-1 items-center">
+                            <span className="text-[10px] text-slate-400 font-normal">সামগ্রিক ব্যালেন্স</span>
+                            <div className="flex flex-wrap gap-1 justify-center">
+                              {aggregate.claim > 0 && (
+                                <span className="text-[11px] font-bold text-[#ff416c] bg-[#ff416c]/15 px-2 py-0.5 rounded border border-[#ff416c]/40 whitespace-nowrap">
+                                  কোম্পানি পাবে: ৳{aggregate.claim.toLocaleString()}
+                                </span>
+                              )}
+                              {aggregate.due > 0 && (
+                                <span className="text-[11px] font-bold text-[#00f2fe] bg-[#00f2fe]/15 px-2 py-0.5 rounded border border-[#00f2fe]/40 whitespace-nowrap">
+                                  লেবার পাবে: ৳{aggregate.due.toLocaleString()}
+                                </span>
+                              )}
+                              {aggregate.claim === 0 && aggregate.due === 0 && (
+                                <span className="text-slate-400 text-xs font-normal">পরিশোধিত (৳ 0)</span>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-3 text-center">
+                          <span className="text-[10px] text-slate-400 block font-normal">মোট দেওয়া টাকা</span>
+                          <span className="font-orbitron font-bold text-emerald-400 text-xs">
+                            ৳{aggregate.totalGiven.toLocaleString()}
+                          </span>
+                        </td>
+                      </tr>
+
+                      {/* ফুটার রো ২: সামগ্রিক ব্যালেন্স সারসংক্ষেপ বার */}
+                      <tr className="bg-gradient-to-r from-[#00f2fe]/10 via-[#4facfe]/10 to-[#ff416c]/10 text-xs font-medium border-t border-white/15">
+                        <td colSpan={8} className="py-3 px-4">
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div className="text-white font-bold text-sm flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full bg-[#00f2fe] animate-pulse"></span>
+                              <span>সর্বমোট সারসংক্ষেপ:</span>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-3">
+                              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/40 border border-white/10">
+                                <span className="text-slate-400">মোট মজুরি:</span>
+                                <span className="font-orbitron font-bold text-emerald-400 text-sm">
+                                  ৳{aggregate.paid.toLocaleString()}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/40 border border-white/10">
+                                <span className="text-slate-400">মোট অ্যাডভান্স:</span>
+                                <span className="font-orbitron font-bold text-[#ff416c] text-sm">
+                                  ৳{aggregate.advance.toLocaleString()}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-2 bg-black/50 px-3 py-1.5 rounded-lg border border-white/15">
+                                <span className="text-slate-300 font-semibold">সামগ্রিক ব্যালেন্স:</span>
+                                {aggregate.claim > 0 && (
+                                  <span className="text-xs font-bold text-[#ff416c] bg-[#ff416c]/20 px-2.5 py-0.5 rounded border border-[#ff416c]/40">
+                                    কোম্পানি পাবে: ৳{aggregate.claim.toLocaleString()}
+                                  </span>
+                                )}
+                                {aggregate.due > 0 && (
+                                  <span className="text-xs font-bold text-[#00f2fe] bg-[#00f2fe]/20 px-2.5 py-0.5 rounded border border-[#00f2fe]/40">
+                                    লেবার পাবে: ৳{aggregate.due.toLocaleString()}
+                                  </span>
+                                )}
+                                {aggregate.claim === 0 && aggregate.due === 0 && (
+                                  <span className="text-slate-400 text-xs">সব পরিশোধিত</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    </tfoot>
+                  )}
                 </table>
               </div>
+
+              {/* ফিল্টারকৃত মোট (${filteredSummaries.length} জন) এর সর্বমোট হিসাব প্যানেল */}
+              {filteredSummaries.length > 0 && (
+                <div className="mt-6 rounded-2xl bg-gradient-to-b from-[#0e1730] to-[#080d1e] border-2 border-[#00f2fe]/30 p-5 sm:p-6 shadow-[0_10px_35px_rgba(0,0,0,0.6)]">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4 mb-5">
+                    <div>
+                      <h3 className="text-base sm:text-lg font-bold text-white flex flex-wrap items-center gap-2">
+                        <span>ফিল্টারকৃত মোট ({filteredSummaries.length} জন) — সর্বমোট ব্যালেন্স হিসাব</span>
+                      </h3>
+                      <p className="text-xs text-slate-300 mt-0.5">
+                        কাকে কত টাকা দেওয়া হয়েছে এবং কার কাছে কত টাকা পাওনা বা দাবি রয়েছে তার চূড়ান্ত খতিয়ান
+                      </p>
+                    </div>
+
+                    <div className="text-left sm:text-right">
+                      <span className="text-xs text-slate-400 block">মোট ফিল্টারকৃত শ্রমিক</span>
+                      <span className="font-orbitron font-black text-lg text-[#00f2fe]">
+                        {filteredSummaries.length} জন
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                    {/* ১. কাকে কত টাকা দিলাম */}
+                    <div className="rounded-xl p-4 bg-white/5 border border-emerald-500/30">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="text-xs font-semibold text-emerald-400">কাকে কত টাকা দিলাম</span>
+                        <span className="text-[10px] text-slate-400 bg-emerald-500/10 px-2 py-0.5 rounded">সর্বমোট প্রদান</span>
+                      </div>
+                      <div className="font-orbitron font-black text-2xl text-emerald-400">
+                        ৳{aggregate.totalGiven.toLocaleString()}
+                      </div>
+                      <div className="mt-2 pt-2 border-t border-white/5 text-[11px] text-slate-300 space-y-0.5">
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">মজুরি পরিশোধ:</span>
+                          <span className="font-orbitron font-semibold text-white">৳{aggregate.paid.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-[#ff416c]">অগ্রিম প্রদান:</span>
+                          <span className="font-orbitron font-semibold text-[#ff416c]">৳{aggregate.advance.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ২. কোম্পানি কত টাকা পাবে */}
+                    <div className="rounded-xl p-4 bg-[#ff416c]/8 border border-[#ff416c]/40">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="text-xs font-semibold text-[#ff416c]">কোম্পানি পাবে</span>
+                        <span className="text-[10px] text-[#ff416c] bg-[#ff416c]/15 px-2 py-0.5 rounded font-bold">অগ্রিম দাবি</span>
+                      </div>
+                      <div className="font-orbitron font-black text-2xl text-[#ff416c]">
+                        ৳{aggregate.claim.toLocaleString()}
+                      </div>
+                      <div className="mt-2 pt-2 border-t border-white/5 text-[11px] text-slate-300">
+                        {aggregate.claimCount > 0 ? (
+                          <span className="text-[#ff416c] font-medium">{aggregate.claimCount} জন শ্রমিকের কাছে এই টাকা পাবেন</span>
+                        ) : (
+                          <span className="text-slate-400">কারো কাছে অগ্রিম পাওনা নেই</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* ৩. লেবার কত টাকা পাবে */}
+                    <div className="rounded-xl p-4 bg-[#00f2fe]/8 border border-[#00f2fe]/40">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="text-xs font-semibold text-[#00f2fe]">লেবার পাবে</span>
+                        <span className="text-[10px] text-[#00f2fe] bg-[#00f2fe]/15 px-2 py-0.5 rounded font-bold">বকেয়া মজুরি</span>
+                      </div>
+                      <div className="font-orbitron font-black text-2xl text-[#00f2fe]">
+                        ৳{aggregate.due.toLocaleString()}
+                      </div>
+                      <div className="mt-2 pt-2 border-t border-white/5 text-[11px] text-slate-300">
+                        {aggregate.dueCount > 0 ? (
+                          <span className="text-cyan-300 font-medium">{aggregate.dueCount} জন শ্রমিকের বকেয়া মজুরি রয়েছে</span>
+                        ) : (
+                          <span className="text-slate-400">কোনো শ্রমিকের বকেয়া নেই</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* ৪. হাজিরা ও মোট অর্জিত আয় */}
+                    <div className="rounded-xl p-4 bg-white/5 border border-white/10">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="text-xs font-semibold text-slate-300">হাজিরা ও অর্জিত আয়</span>
+                        <span className="text-[10px] text-slate-400 bg-white/10 px-2 py-0.5 rounded">কাজের হিসাব</span>
+                      </div>
+                      <div className="font-orbitron font-black text-2xl text-white">
+                        {aggregate.days} <span className="text-sm font-sans font-normal text-slate-400">দিন</span>
+                      </div>
+                      <div className="mt-2 pt-2 border-t border-white/5 text-[11px] text-slate-300 flex justify-between">
+                        <span className="text-slate-400">মোট অর্জিত আয়:</span>
+                        <span className="font-orbitron font-bold text-white">৳{aggregate.earned.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* সামগ্রিক ব্যালেন্স নিট ফলাফল */}
+                  <div className="mt-4 p-3.5 rounded-xl bg-black/40 border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#00f2fe] animate-pulse"></span>
+                      <span className="text-slate-300">সামগ্রিক নিট ফলাফল:</span>
+                      {aggregate.claim > aggregate.due ? (
+                        <span className="font-bold text-[#ff416c] font-orbitron">
+                          কোম্পানি সর্বমোট পাবে: ৳{(aggregate.claim - aggregate.due).toLocaleString()}
+                        </span>
+                      ) : aggregate.due > aggregate.claim ? (
+                        <span className="font-bold text-[#00f2fe] font-orbitron">
+                          লেবাররা সর্বমোট পাবে: ৳{(aggregate.due - aggregate.claim).toLocaleString()}
+                        </span>
+                      ) : (
+                        <span className="font-bold text-slate-300">হিসাব সম্পূর্ণ সমতায় রয়েছে (৳ ০)</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* একক শ্রমিকের বিস্তারিত লেজার মডাল */}
+          {/* একক শ্রমিকের বিস্তারিত লেজার খতিয়ান মডাল */}
           {detailWorker && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
               <div className="glass-panel w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden bg-[#070b1b]">
                 <div className="p-4 border-b border-white/10 flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-bold text-white">{detailWorker.name}-এর বিস্তারিত লেজার খতিয়ান</h3>
-                    <p className="text-xs text-slate-400">{detailWorker.trade} • দৈনিক রেট: ৳{detailWorker.dailyWage}</p>
+                    <h3 className="text-lg font-bold text-white">{detailWorker.name}-এর বিস্তারিত খতিয়ান</h3>
+                    <p className="text-xs text-slate-400">{detailWorker.trade} • দৈনিক মজুরি: ৳{detailWorker.dailyWage}</p>
                   </div>
                   <button
                     onClick={() => setDetailWorker(null)}
@@ -895,7 +1140,7 @@
       );
     }
 
-    // মাউন্ট অ্যাপ্লিকেশন
+    // অ্যাপ্লিকেশন মাউন্ট
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
   </script>
