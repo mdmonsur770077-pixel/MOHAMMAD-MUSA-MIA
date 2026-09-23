@@ -1,21 +1,565 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="bn">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>3D লেবার কন্ট্রোল হাব - মনসুর লেবার পোর্টাল</title>
-    <meta name="description" content="মনসুর লেবার পোর্টাল - আর্কিটেকচারাল লেবার কন্ট্রোল হাব, বাৎসরিক ও মাসিক অডিট লেজার এবং রিয়েল-টাইম ব্যালেন্স হিসাব" />
-    <meta property="og:title" content="3D লেবার কন্ট্রোল হাব - মনসুর লেবার পোর্টাল" />
-    <meta property="og:description" content="মনসুর লেবার পোর্টাল - আর্কিটেকচারাল লেবার কন্ট্রোল হাব, বাৎসরিক ও মাসিক অডিট লেজার এবং রিয়েল-টাইম ব্যালেন্স হিসাব" />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.maateen.me/nikosh/font.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800;900&family=Noto+Sans+Bengali:wght@300;400;500;600;700&family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  </head>
-  <body class="bg-[#050814] text-[#e6f1ff] min-h-screen overflow-x-hidden selection:bg-[#00f2fe]/30 selection:text-[#00f2fe]">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D লেবার কন্ট্রোল হাব - মনসুর লেবার পোর্টাল</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800;900&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Hind Siliguri', 'Noto Sans Bengali', 'sans-serif'],
+            orbitron: ['Orbitron', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React 18 & ReactDOM & Babel -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Three.js (3D Background) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body {
+      background-color: #050814;
+      color: #e6f1ff;
+      overflow-x: hidden;
+      font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif;
+    }
+    .font-orbitron {
+      font-family: 'Orbitron', monospace;
+    }
+    .glass-panel {
+      background: rgba(8, 15, 35, 0.78);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .neon-glow-cyan {
+      box-shadow: 0 0 25px rgba(0, 242, 254, 0.25);
+    }
+    .neon-glow-emerald {
+      box-shadow: 0 0 25px rgba(56, 239, 125, 0.25);
+    }
+    .neon-glow-coral {
+      box-shadow: 0 0 25px rgba(255, 65, 108, 0.25);
+    }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #fff !important; color: #000 !important; }
+      .glass-panel { background: #fff !important; border: 1px solid #ccc !important; color: #000 !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- 3D Three.js Background Container -->
+  <div id="three-bg" class="fixed inset-0 pointer-events-none z-0"></div>
+
+  <!-- React Root Container -->
+  <div id="root" class="relative z-10"></div>
+
+  <!-- React Application Logic -->
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef } = React;
+
+    // --- Helper Functions ---
+    const BANGLA_MONTHS = [
+      'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
+      'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'
+    ];
+
+    const toBanglaNumber = (num) => {
+      if (num === undefined || num === null) return '';
+      const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+      return num.toString().split('').map(d => (d >= '0' && d <= '9' ? banglaDigits[parseInt(d, 10)] : d)).join('');
+    };
+
+    const roundMoney = (val) => Math.round((Number(val || 0) + Number.EPSILON) * 100) / 100;
+
+    const getTodayDateString = () => {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+
+    // Initial Demo Data
+    const INITIAL_WORKERS = [
+      { id: 'w-1', name: 'আব্দুল করিম', phone: '01711223344', dailyWage: 800, initialAdvance: 1000, notes: 'প্রধান মেকানিক', createdAt: Date.now() - 50000000 },
+      { id: 'w-2', name: 'রফিকুল ইসলাম', phone: '01822334455', dailyWage: 650, initialAdvance: 0, notes: 'ঢালাই মিস্ত্রি', createdAt: Date.now() - 40000000 },
+      { id: 'w-3', name: 'সুমন মিয়া', phone: '01933445566', dailyWage: 500, initialAdvance: 500, notes: 'সহকারী হেল্পার', createdAt: Date.now() - 30000000 }
+    ];
+
+    const INITIAL_TRANSACTIONS = [
+      { id: 't-1', workerId: 'w-1', date: '2026-09-01', days: 1, paid: 500, advance: 0, notes: 'নরমাল ডিউটি', createdAt: Date.now() - 20000000 },
+      { id: 't-2', workerId: 'w-1', date: '2026-09-02', days: 1, paid: 800, advance: 200, notes: 'ফুল পেমেন্ট + হাতখরচ', createdAt: Date.now() - 19000000 },
+      { id: 't-3', workerId: 'w-2', date: '2026-09-01', days: 1.5, paid: 600, advance: 0, notes: 'ওভারটাইম হাফ ডে', createdAt: Date.now() - 18000000 },
+      { id: 't-4', workerId: 'w-3', date: '2026-09-02', days: 1, paid: 0, advance: 300, notes: 'অগ্রিম প্রদান', createdAt: Date.now() - 17000000 }
+    ];
+
+    function App() {
+      // Load saved data from localStorage
+      const [workers, setWorkers] = useState(() => {
+        const saved = localStorage.getItem('monsur_workers');
+        return saved ? JSON.parse(saved) : INITIAL_WORKERS;
+      });
+
+      const [transactions, setTransactions] = useState(() => {
+        const saved = localStorage.getItem('monsur_tx');
+        return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
+      });
+
+      const [selectedYear, setSelectedYear] = useState(2026);
+      const [selectedMonth, setSelectedMonth] = useState(9); // September
+
+      // New Worker Form State
+      const [newWorkerName, setNewWorkerName] = useState('');
+      const [newWorkerPhone, setNewWorkerPhone] = useState('');
+      const [newWorkerWage, setNewWorkerWage] = useState('');
+      const [newWorkerAdvance, setNewWorkerAdvance] = useState('');
+
+      // New Entry Form State
+      const [entryWorkerId, setEntryWorkerId] = useState('');
+      const [entryDate, setEntryDate] = useState(getTodayDateString());
+      const [entryDays, setEntryDays] = useState('1');
+      const [entryPaid, setEntryPaid] = useState('');
+      const [entryAdvance, setEntryAdvance] = useState('');
+      const [entryNotes, setEntryNotes] = useState('');
+
+      // Persist data
+      useEffect(() => {
+        localStorage.setItem('monsur_workers', JSON.stringify(workers));
+      }, [workers]);
+
+      useEffect(() => {
+        localStorage.setItem('monsur_tx', JSON.stringify(transactions));
+      }, [transactions]);
+
+      // Calculate Summaries
+      const periodSummaries = useMemo(() => {
+        return workers.map(w => {
+          const wTx = transactions.filter(t => {
+            if (t.workerId !== w.id) return false;
+            const [tY, tM] = t.date.split('-').map(Number);
+            return tY === selectedYear && tM === selectedMonth;
+          });
+
+          const totalDays = wTx.reduce((sum, t) => sum + (Number(t.days) || 0), 0);
+          const totalEarned = roundMoney(totalDays * (w.dailyWage || 0));
+          const totalPaid = roundMoney(wTx.reduce((sum, t) => sum + (Number(t.paid) || 0), 0));
+          const totalAdvance = roundMoney(wTx.reduce((sum, t) => sum + (Number(t.advance) || 0), 0));
+          const totalPaidAll = roundMoney(totalPaid + totalAdvance);
+          const balance = roundMoney(totalEarned - totalPaidAll);
+
+          return {
+            worker: w,
+            totalDays,
+            totalEarned,
+            totalPaid,
+            totalAdvance,
+            totalPaidAll,
+            balance
+          };
+        });
+      }, [workers, transactions, selectedYear, selectedMonth]);
+
+      // Aggregated Financial Metrics
+      const totalEarned = roundMoney(periodSummaries.reduce((a, b) => a + b.totalEarned, 0));
+      const totalExpenditure = roundMoney(periodSummaries.reduce((a, b) => a + b.totalPaidAll, 0));
+      const totalDaysCount = periodSummaries.reduce((a, b) => a + b.totalDays, 0);
+      const netGain = roundMoney(totalEarned - totalExpenditure);
+
+      // Add Worker Handler
+      const handleAddWorker = (e) => {
+        e.preventDefault();
+        if (!newWorkerName || !newWorkerWage) return;
+        const newW = {
+          id: 'w-' + Date.now(),
+          name: newWorkerName,
+          phone: newWorkerPhone || 'প্রযোজ্য নয়',
+          dailyWage: parseFloat(newWorkerWage) || 0,
+          initialAdvance: parseFloat(newWorkerAdvance) || 0,
+          createdAt: Date.now()
+        };
+        setWorkers([newW, ...workers]);
+        setNewWorkerName('');
+        setNewWorkerPhone('');
+        setNewWorkerWage('');
+        setNewWorkerAdvance('');
+      };
+
+      // Add Transaction Handler
+      const handleAddTransaction = (e) => {
+        e.preventDefault();
+        if (!entryWorkerId) return;
+        const newT = {
+          id: 't-' + Date.now(),
+          workerId: entryWorkerId,
+          date: entryDate,
+          days: parseFloat(entryDays) || 0,
+          paid: parseFloat(entryPaid) || 0,
+          advance: parseFloat(entryAdvance) || 0,
+          notes: entryNotes,
+          createdAt: Date.now()
+        };
+        setTransactions([newT, ...transactions]);
+        setEntryPaid('');
+        setEntryAdvance('');
+        setEntryNotes('');
+      };
+
+      return (
+        <div className="min-h-screen pb-16 px-3 sm:px-6 max-w-7xl mx-auto">
+          {/* Top Header */}
+          <header className="py-6 border-b border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-emerald-400 flex items-center justify-center font-bold text-black text-xl font-orbitron">
+                  3D
+                </div>
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-black tracking-wide text-white">
+                    মনসুর লেবার পোর্টাল
+                  </h1>
+                  <p className="text-xs text-cyan-400 font-medium">
+                    আর্কিটেকচারাল লেবার কন্ট্রোল হাব ও স্বয়ংক্রিয় অডিট
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Year / Month Filter Pills */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <select 
+                value={selectedYear} 
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                className="bg-black/50 border border-white/20 rounded-xl px-3 py-2 text-sm text-white font-orbitron focus:outline-none focus:border-cyan-400"
+              >
+                <option value={2025}>2025</option>
+                <option value={2026}>2026</option>
+                <option value={2027}>2027</option>
+              </select>
+
+              <select 
+                value={selectedMonth} 
+                onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                className="bg-black/50 border border-white/20 rounded-xl px-3 py-2 text-sm text-cyan-300 font-sans focus:outline-none focus:border-cyan-400"
+              >
+                {BANGLA_MONTHS.map((m, idx) => (
+                  <option key={idx} value={idx + 1}>{m}</option>
+                ))}
+              </select>
+
+              <button 
+                onClick={() => window.print()} 
+                className="no-print bg-white/10 hover:bg-white/20 border border-white/20 text-xs px-3 py-2.5 rounded-xl font-semibold transition flex items-center gap-1.5"
+              >
+                🖨️ প্রিন্ট লেজার
+              </button>
+            </div>
+          </header>
+
+          {/* NEW: Profit/Loss Summary Card */}
+          <div className="glass-panel p-5 sm:p-6 mb-6 rounded-2xl border border-white/15 bg-gradient-to-r from-[#071325]/95 via-[#091734]/90 to-[#0c1f3d]/95 relative overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4 mb-5">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-white tracking-wide">
+                    Profit/Loss Summary
+                  </h2>
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">
+                    লাভ-ক্ষতি ও ব্যয় বিশ্লেষণ
+                  </span>
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 font-orbitron">
+                    {BANGLA_MONTHS[selectedMonth - 1]} {toBanglaNumber(selectedYear)}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">
+                  নির্বাচিত মাসের মোট উৎপাদিত কাজের মূল্য বনাম কোম্পানির মোট নগদ খরচের তুলনামূলক হিসাব
+                </p>
+              </div>
+
+              <div className={`px-4 py-2 rounded-xl border ${netGain >= 0 ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300' : 'bg-[#ff416c]/15 border-[#ff416c]/30 text-[#ff416c]'}`}>
+                <div className="text-[10px] uppercase font-bold tracking-wider opacity-80">নিট আর্থিক স্থিতি (Net Balance)</div>
+                <div className="font-orbitron font-extrabold text-lg sm:text-xl">
+                  {netGain >= 0 ? `+৳ ${netGain.toLocaleString()}` : `-৳ ${Math.abs(netGain).toLocaleString()}`}
+                </div>
+              </div>
+            </div>
+
+            {/* 4 Financial KPI Tiles */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+              <div className="p-4 rounded-xl bg-black/40 border border-[#ff416c]/30">
+                <div className="text-xs font-bold text-[#ff416c] uppercase">কোম্পানির মোট ব্যয় (Expenditure)</div>
+                <div className="font-orbitron text-2xl font-black text-[#ff416c] mt-1">৳ {totalExpenditure.toLocaleString()}</div>
+                <div className="text-[11px] text-slate-400 mt-1">পরিশোধিত মজুরি ও দেওয়া অগ্রিম</div>
+              </div>
+
+              <div className="p-4 rounded-xl bg-black/40 border border-cyan-500/30">
+                <div className="text-xs font-bold text-cyan-400 uppercase">কাজের অর্জিত মূল্য (Labor Value)</div>
+                <div className="font-orbitron text-2xl font-black text-cyan-400 mt-1">৳ {totalEarned.toLocaleString()}</div>
+                <div className="text-[11px] text-slate-400 mt-1">মোট {totalDaysCount} দিন হাজিরার কাজ</div>
+              </div>
+
+              <div className="p-4 rounded-xl bg-black/40 border border-emerald-500/30">
+                <div className="text-xs font-bold text-emerald-400 uppercase">নিট মার্জিন / সাশ্রয়</div>
+                <div className="font-orbitron text-2xl font-black text-emerald-400 mt-1">৳ {netGain.toLocaleString()}</div>
+                <div className="text-[11px] text-slate-400 mt-1">{netGain >= 0 ? 'কোম্পানি উদ্বৃত্তে আছে' : 'ঘাটতি রয়েছে'}</div>
+              </div>
+
+              <div className="p-4 rounded-xl bg-black/40 border border-purple-500/30">
+                <div className="text-xs font-bold text-purple-400 uppercase">সক্রিয় শ্রমিক সংখ্যা</div>
+                <div className="font-orbitron text-2xl font-black text-purple-300 mt-1">{toBanglaNumber(periodSummaries.length)} জন</div>
+                <div className="text-[11px] text-slate-400 mt-1">রেকর্ডভুক্ত মেকানিক ও শ্রমিক</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Grid: 2 Forms */}
+          <div className="no-print grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
+            {/* 1. Add Worker */}
+            <div className="glass-panel p-5 rounded-2xl border border-white/10">
+              <h3 className="text-sm font-bold text-cyan-300 mb-3 flex items-center gap-2">
+                <span>➕ নতুন লেবার রেজিস্ট্রেশন</span>
+              </h3>
+              <form onSubmit={handleAddWorker} className="grid grid-cols-2 gap-3">
+                <input 
+                  type="text" 
+                  placeholder="শ্রমিকের নাম *" 
+                  required
+                  value={newWorkerName}
+                  onChange={(e) => setNewWorkerName(e.target.value)}
+                  className="bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" 
+                />
+                <input 
+                  type="text" 
+                  placeholder="ফোন নম্বর" 
+                  value={newWorkerPhone}
+                  onChange={(e) => setNewWorkerPhone(e.target.value)}
+                  className="bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" 
+                />
+                <input 
+                  type="number" 
+                  placeholder="দৈনিক হাজিরা মজুরি (টাকা) *" 
+                  required
+                  value={newWorkerWage}
+                  onChange={(e) => setNewWorkerWage(e.target.value)}
+                  className="bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" 
+                />
+                <input 
+                  type="number" 
+                  placeholder="প্রাথমিক বকেয়া/অগ্রিম" 
+                  value={newWorkerAdvance}
+                  onChange={(e) => setNewWorkerAdvance(e.target.value)}
+                  className="bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" 
+                />
+                <button 
+                  type="submit" 
+                  className="col-span-2 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-bold text-xs rounded-xl transition"
+                >
+                  লেবার সংরক্ষণ করুন
+                </button>
+              </form>
+            </div>
+
+            {/* 2. Daily Entry Form */}
+            <div className="glass-panel p-5 rounded-2xl border border-white/10">
+              <h3 className="text-sm font-bold text-emerald-400 mb-3 flex items-center gap-2">
+                <span>📝 দৈনিক হাজিরা ও লেনদেন অ্যান্ট্রি</span>
+              </h3>
+              <form onSubmit={handleAddTransaction} className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <select 
+                  required
+                  value={entryWorkerId}
+                  onChange={(e) => setEntryWorkerId(e.target.value)}
+                  className="col-span-2 sm:col-span-1 bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs text-white"
+                >
+                  <option value="">শ্রমিক নির্বাচন করুন *</option>
+                  {workers.map(w => (
+                    <option key={w.id} value={w.id}>{w.name} ({w.dailyWage}৳)</option>
+                  ))}
+                </select>
+
+                <input 
+                  type="date" 
+                  required
+                  value={entryDate}
+                  onChange={(e) => setEntryDate(e.target.value)}
+                  className="bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs text-white font-orbitron" 
+                />
+
+                <input 
+                  type="number" 
+                  step="0.5" 
+                  placeholder="হাজিরা দিন (1, 0.5)" 
+                  value={entryDays}
+                  onChange={(e) => setEntryDays(e.target.value)}
+                  className="bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" 
+                />
+
+                <input 
+                  type="number" 
+                  placeholder="প্রদত্ত মজুরি (টাকা)" 
+                  value={entryPaid}
+                  onChange={(e) => setEntryPaid(e.target.value)}
+                  className="bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" 
+                />
+
+                <input 
+                  type="number" 
+                  placeholder="অগ্রিম টাকা" 
+                  value={entryAdvance}
+                  onChange={(e) => setEntryAdvance(e.target.value)}
+                  className="bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" 
+                />
+
+                <input 
+                  type="text" 
+                  placeholder="মন্তব্য / নোট" 
+                  value={entryNotes}
+                  onChange={(e) => setEntryNotes(e.target.value)}
+                  className="bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" 
+                />
+
+                <button 
+                  type="submit" 
+                  className="col-span-2 sm:col-span-3 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-black font-bold text-xs rounded-xl transition"
+                >
+                  লেনদেন অ্যান্ট্রি নিশ্চিত করুন
+                </button>
+              </form>
+            </div>
+          </div>
+
+          {/* Master Labor Ledger Table */}
+          <div className="glass-panel rounded-2xl border border-white/10 overflow-hidden">
+            <div className="p-4 border-b border-white/10 flex items-center justify-between">
+              <h3 className="font-bold text-sm text-white">
+                মাস্টার লেবার অডিট লেজার — {BANGLA_MONTHS[selectedMonth - 1]} {toBanglaNumber(selectedYear)}
+              </h3>
+              <span className="text-xs text-cyan-400 font-orbitron">{periodSummaries.length} Records</span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-black/40 text-slate-400 border-b border-white/10">
+                  <tr>
+                    <th className="p-3">শ্রমিকের নাম</th>
+                    <th className="p-3">দৈনিক রেট</th>
+                    <th className="p-3 text-center">মোট হাজিরা</th>
+                    <th className="p-3 text-right">কাজের মূল্য</th>
+                    <th className="p-3 text-right">প্রদত্ত মজুরি</th>
+                    <th className="p-3 text-right">দেওয়া অগ্রিম</th>
+                    <th className="p-3 text-right">মোট ব্যয়</th>
+                    <th className="p-3 text-right">ব্যালেন্স স্থিতি</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5 font-sans">
+                  {periodSummaries.map((ps) => {
+                    const isDue = ps.balance > 0;
+                    return (
+                      <tr key={ps.worker.id} className="hover:bg-white/5 transition">
+                        <td className="p-3 font-semibold text-white">
+                          {ps.worker.name}
+                          <span className="block text-[10px] text-slate-500">{ps.worker.phone}</span>
+                        </td>
+                        <td className="p-3 font-orbitron text-slate-300">৳{ps.worker.dailyWage}</td>
+                        <td className="p-3 text-center font-orbitron text-cyan-300">{ps.totalDays} দিন</td>
+                        <td className="p-3 text-right font-orbitron text-cyan-400">৳{ps.totalEarned.toLocaleString()}</td>
+                        <td className="p-3 text-right font-orbitron text-slate-300">৳{ps.totalPaid.toLocaleString()}</td>
+                        <td className="p-3 text-right font-orbitron text-[#ff416c]">৳{ps.totalAdvance.toLocaleString()}</td>
+                        <td className="p-3 text-right font-orbitron text-[#ff416c] font-bold">৳{ps.totalPaidAll.toLocaleString()}</td>
+                        <td className="p-3 text-right font-orbitron font-bold">
+                          <span className={`px-2.5 py-1 rounded-lg ${isDue ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' : 'bg-[#ff416c]/15 text-[#ff416c] border border-[#ff416c]/30'}`}>
+                            {isDue ? `+৳ ${ps.balance.toLocaleString()}` : `-৳ ${Math.abs(ps.balance).toLocaleString()}`}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // --- 3D Background Initialization with Three.js ---
+    function initThreeBackground() {
+      const container = document.getElementById('three-bg');
+      if (!container) return;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 80;
+
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container.appendChild(renderer.domElement);
+
+      const particleCount = 500;
+      const geometry = new THREE.BufferGeometry();
+      const positions = new Float32Array(particleCount * 3);
+      const colors = new Float32Array(particleCount * 3);
+
+      for (let i = 0; i < particleCount * 3; i += 3) {
+        positions[i] = (Math.random() - 0.5) * 200;
+        positions[i + 1] = (Math.random() - 0.5) * 200;
+        positions[i + 2] = (Math.random() - 0.5) * 150;
+
+        colors[i] = 0.0;
+        colors[i + 1] = 0.95;
+        colors[i + 2] = 0.99;
+      }
+
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+      const material = new THREE.PointsMaterial({
+        size: 2.2,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.5,
+      });
+
+      const particles = new THREE.Points(geometry, material);
+      scene.add(particles);
+
+      function animate() {
+        requestAnimationFrame(animate);
+        particles.rotation.y += 0.0004;
+        particles.rotation.x += 0.0002;
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    }
+
+    // Mount Application
+    initThreeBackground();
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
 </html>
